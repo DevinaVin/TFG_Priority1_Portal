@@ -228,7 +228,7 @@ VIEWS.volunteer.home = () => {
   <div class="bento">
     <div class="ticket">${ticket}</div>
     <div class="card ring-card">${ring(h, target)}<div><div class="eyebrow" style="margin-bottom:10px"><span class="mono">${hrs(target * 60 - m)}</span> hrs to your next milestone</div><div class="marks">${marks}</div></div></div>
-    <div class="swing"><small>Show at the till</small><div class="qr">${qr(v.code)}</div><b>${v.code}</b><small>Scan when you arrive and leave</small></div>
+    <button class="swing" data-action="big-qr" aria-label="Show check-in code full size"><small>Show at the till · tap to enlarge</small><div class="qr">${qr(v.code)}</div><b>${v.code}</b><small>Scan when you arrive and leave</small></button>
   </div>
   ${fresh ? firstSteps(v) : ''}
   <div class="card" style="margin-top:16px"><div class="card-head"><h3>Your next 7 days</h3><button class="btn sm" data-action="tab" data-tab="book">${ic('plus')}Add a shift</button></div>${weekStrip(v)}</div>
@@ -659,6 +659,7 @@ document.addEventListener('click', e => {
     case 'cal-nav': UI.calOff = Math.max(-2, Math.min(2, (UI.calOff || 0) + +t.dataset.d)); render(); break;
     case 'cal-book': UI.prefDate = t.dataset.d; UI.tab.volunteer = 'book'; render(); delete UI.prefDate; scrollTo(0, 0); break;
     case 'profile': profile(vol(id)); break;
+    case 'big-qr': { const v = me(); $('#modal-root').innerHTML = `<div class="backdrop qr-bg" data-action="close-bg"><div class="qr-full" role="dialog" aria-modal="true"><span class="kicker">Thrift for Good · volunteer</span><h2>${esc(v.name)}</h2><div class="qr-big">${qr(v.code, 8)}</div><b class="mono">${v.code}</b><p class="small muted">Turn your screen brightness up and hold it under the scanner.</p><button class="btn dark" data-action="close" style="width:100%">Done</button></div></div>`; break; }
     case 'join-again': UI.joined = null; UI.chips = []; render(); break;
   }
 });
