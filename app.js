@@ -170,6 +170,7 @@ function render() {
   requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.ring .fill[data-off]').forEach(c => { c.style.strokeDashoffset = c.dataset.off; })));
   document.querySelectorAll('form[data-form=book],form[data-form=edit]').forEach(updatePicker);
   saveUI();
+  renderScript();
 }
 const VIEWS = { volunteer: {}, manager: {}, join: {} };
 const head = (kicker, title, sub, right = '') => `<div class="page-head"><div><span class="kicker">${kicker}</span><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div><div class="row">${right}</div></div>`;
@@ -493,6 +494,28 @@ const MODALS = {
   },
 };
 
+/* ---------- presenter script ---------- */
+const SCRIPT = [
+  ['join', 'form', 'Sign-up replaces Airtable', 'Two-minute form, with the 50-hour certificate question.'],
+  ['manager', 'approvals', 'Approve after induction', 'Staff approve. A welcome email and QR code go out.'],
+  ['volunteer', 'book', 'Flexible booking', 'Any day, any store, any hours. Tap arrive, then leave.'],
+  ['volunteer', 'shifts', 'Change or cancel yourself', 'No more staff editing shifts by hand.'],
+  ['manager', 'today', 'Scan in and out at the till', 'Scan Aisha in, then out at 14:00. She crosses 50 hours.'],
+  ['manager', 'insights', 'Automatic thank-yous', 'The 50-hour email has just gone out. Priority 2 link.'],
+  ['manager', 'hours', 'Export for CDA', 'One CSV with every visit, ready to hand over.'],
+];
+function renderScript() {
+  let el = $('#script');
+  if (!el) { el = document.createElement('aside'); el.id = 'script'; document.body.append(el); }
+  if (!UI.script) { el.innerHTML = `<button class="script-fab" data-action="script-open">${ic('arrow')}Demo script</button>`; return; }
+  const cur = SCRIPT.findIndex(([r, t]) => UI.role === r && UI.tab[r] === t);
+  el.innerHTML = `<div class="script-panel"><div class="script-head"><div><span class="kicker" style="margin:0">Presenter</span><b>Demo script</b></div><button class="btn icon sm" data-action="script-close" aria-label="Hide demo script">${ic('x')}</button></div>
+    <ol>${SCRIPT.map(([r, t, title, note], i) => `<li class="${i === cur ? 'on' : ''}"><button data-action="script-go" data-i="${i}"><i>${i + 1}</i><span><b>${title}</b><small>${note}</small></span></button></li>`).join('')}</ol>
+    <div class="script-foot"><button class="btn sm" data-action="script-step" data-d="-1" ${cur <= 0 ? 'disabled' : ''}>Back</button><span class="mono small muted">${cur < 0 ? '–' : cur + 1} / ${SCRIPT.length}</span><button class="btn sm primary" data-action="script-step" data-d="1" ${cur >= SCRIPT.length - 1 ? 'disabled' : ''}>Next ${ic('arrow')}</button></div></div>`;
+  const on = el.querySelector('li.on'); if (on) on.scrollIntoView({ block: 'nearest' });
+}
+function goScript(i) { const [r, t] = SCRIPT[i]; UI.role = r; UI.tab[r] = t; closeModal(); render(); scrollTo(0, 0); }
+
 /* ---------- actions ---------- */
 function flash() { const vf = $('#vf'); if (vf) { vf.classList.remove('flash'); void vf.offsetWidth; vf.classList.add('flash'); } }
 function logScan(v, dir, t) { S.scans = [{ name: v.name, dir, t }, ...(S.scans || [])].slice(0, 8); }
@@ -558,6 +581,10 @@ document.addEventListener('click', e => {
     case 'email': { const em = S.emails.find(x => x.id === id); modal('Automated email', `Sent ${fd(em.date)}`, emailHTML(vol(em.volId), em.kind)); break; }
     case 'nudge': modal('"Gone quiet" check-in', 'Sent automatically after 30 days without a visit.', emailHTML(vol(id), 'quiet') + `<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="send-nudge">${ic('mail')}Send now</button></div>`); break;
     case 'send-nudge': closeModal(); toast('Check-in email sent', 'mail'); break;
+    case 'script-open': UI.script = true; renderScript(); saveUI(); break;
+    case 'script-close': UI.script = false; renderScript(); saveUI(); break;
+    case 'script-go': goScript(+t.dataset.i); break;
+    case 'script-step': { const cur = SCRIPT.findIndex(([r, tb]) => UI.role === r && UI.tab[r] === tb); goScript(Math.max(0, Math.min(SCRIPT.length - 1, (cur < 0 ? -1 : cur) + +t.dataset.d))); break; }
     case 'join-again': UI.joined = null; UI.chips = []; render(); break;
   }
 });

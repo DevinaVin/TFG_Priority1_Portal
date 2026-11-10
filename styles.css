@@ -522,3 +522,25 @@ tr:last-child td{border-bottom:0}
 @keyframes leave{60%{opacity:.6;transform:translateX(18px)}to{opacity:0;transform:translateX(40px)}}
 .all-clear{display:flex;align-items:center;gap:20px;margin-bottom:16px;background:linear-gradient(120deg,var(--accent-tint),var(--surface) 60%)}
 .all-clear .success-mark{margin:0;flex:none}
+
+/* ---------- presenter script ---------- */
+#script{position:fixed;right:20px;bottom:20px;z-index:40}
+.script-fab{display:flex;align-items:center;gap:8px;border:0;cursor:pointer;background:var(--night);color:var(--night-ink);padding:10px 16px;border-radius:999px;font-weight:500;font-size:13.5px;box-shadow:inset 0 0 0 1px var(--night-line),0 14px 30px -12px rgba(0,0,0,.45);transition:transform .2s var(--ease)}
+.script-fab:hover{transform:translateY(-2px)}
+.script-fab svg.i{color:var(--accent-glow);width:16px;height:16px}
+.script-panel{width:320px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 60px -20px rgba(0,0,0,.35);overflow:hidden;animation:pop .3s var(--ease)}
+.script-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
+.script-head b{display:block;font-size:15px}
+.script-panel ol{list-style:none;margin:0;padding:0 8px;max-height:52vh;overflow:auto}
+.script-panel li button{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s}
+.script-panel li button:hover{background:var(--sunk)}
+.script-panel li i{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;font:600 11px "Geist Mono",monospace;font-style:normal;background:var(--sunk);color:var(--ink-3);margin-top:1px}
+.script-panel li b{display:block;font-weight:500;font-size:13.5px}
+.script-panel li small{display:block;color:var(--ink-3);font-size:12px;line-height:1.4}
+.script-panel li.on button{background:var(--accent-tint)}
+.script-panel li.on i{background:var(--accent);color:#fff}
+.script-foot{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 14px;border-top:1px solid var(--line);margin-top:6px}
+@media (max-width:600px){#script{right:12px;bottom:12px;left:12px;display:flex;justify-content:flex-end}.script-panel{width:100%}.script-panel ol{max-height:40vh}}
+@media print{#script{display:none}}
+td{white-space:nowrap}
+@media (max-width:600px){td{white-space:normal}}
