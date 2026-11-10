@@ -637,3 +637,6 @@ button.swing{border:0;font:inherit;width:100%;cursor:zoom-in;display:block}
 .qr-big svg{width:100%;height:auto;aspect-ratio:1}
 .qr-full b{font-size:15px;letter-spacing:.04em}
 .qr-full p{margin:8px 0 16px;color:#5c5952}
+#toasts{pointer-events:none}.toast{pointer-events:auto}
+.undo{margin-left:10px;background:rgba(255,255,255,.1);border:0;color:var(--accent-glow);font:600 12.5px Geist,sans-serif;padding:4px 10px;border-radius:8px;cursor:pointer}
+.undo:hover{background:rgba(255,255,255,.18)}

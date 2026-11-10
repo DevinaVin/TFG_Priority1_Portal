@@ -637,7 +637,8 @@ document.addEventListener('click', e => {
     }
     case 'chip': UI.chips = UI.chips.includes(t.dataset.v) ? UI.chips.filter(x => x !== t.dataset.v) : [...UI.chips, t.dataset.v]; t.classList.toggle('on'); break;
     case 'edit-shift': MODALS.edit(S.bookings.find(b => b.id === id)); break;
-    case 'cancel-shift': { const b = S.bookings.find(x => x.id === id); if (confirm(`Cancel your ${b.start}–${b.end} shift on ${fd(b.date)}?`)) { b.status = 'cancelled'; ok('Shift cancelled. The store team can see the change.', 'x'); } break; }
+    case 'cancel-shift': { const b = S.bookings.find(x => x.id === id); b.status = 'cancelled'; ok(`${fd(b.date)} ${b.start}–${b.end} cancelled <button class="undo" data-action="undo-cancel" data-id="${b.id}">Undo</button>`, 'x'); break; }
+    case 'undo-cancel': { const b = S.bookings.find(x => x.id === id); if (b) { b.status = 'booked'; t.closest('.toast')?.remove(); ok('Shift restored', 'repeat'); } break; }
     case 'scan': scan(t.dataset.code); break;
     case 'manual': MODALS.manual(); break;
     case 'approve-vol': { const v = vol(id); v.status = 'active'; S.emails.unshift({ id: uid(), volId: id, kind: 'welcome', date: today() }); ok(`<b>${esc(v.name)}</b> approved. Welcome email and QR code sent.`, 'mail'); break; }
