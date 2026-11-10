@@ -317,7 +317,7 @@ VIEWS.volunteer.hours = () => {
   <div class="card"><div class="card-head"><h3>${ic('award')}50-hour certificate</h3>${v.wantsCert ? '<span class="st ok">Opted in</span>' : '<span class="st">Not needed</span>'}</div>${certBox}</div></div>
   ${heatmap(v)}<div class="card" style="margin-top:16px"><div class="card-head"><h3>Visit log</h3><span class="small muted">${rows.length} visits</span></div>
   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged</th><th>Status</th></tr></thead><tbody>
-  ${rows.map(a => `<tr><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out || '…'}</td><td class="mono">${a.out ? hrs(a.minutes) : '–'}</td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`).join('')}</tbody></table></div></div>`;
+  ${rows.map(a => `<tr><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out || '…'}</td><td class="mono">${a.out ? hrs(a.minutes) + 'h' : '–'}</td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`).join('')}</tbody></table></div></div>`;
 };
 
 /* ================= SIGN-UP ================= */
@@ -402,7 +402,7 @@ VIEWS.manager.hours = () => {
   `<div class="stats" style="margin-bottom:16px"><div><span>Approved hours</span><b>${hrs(total)}</b><span>${f === 'All' ? 'all stores' : f}</span></div><div><span>Visits</span><b>${rows.length}</b><span>logged</span></div>
     <div><span>Logged by QR</span><b>${Math.round(rows.filter(a => a.source === 'qr').length / Math.max(1, rows.length) * 100)}%</b><span>no staff typing</span></div><div><span>Waiting</span><b>${rows.filter(a => a.status === 'pending').length}</b><span>for approval</span></div></div>
   <div class="card"><div class="table-wrap"><table><thead><tr><th>Volunteer</th><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged</th><th>Status</th></tr></thead><tbody>
-  ${rows.slice(0, 60).map(a => { const v = vol(a.volId); return `<tr><td><div class="who-cell">${avatar(v)}${esc(v.name)}</div></td><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out}</td><td class="mono"><b>${hrs(a.minutes)}</b></td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`; }).join('')}
+  ${rows.slice(0, 60).map(a => { const v = vol(a.volId); return `<tr><td><div class="who-cell">${avatar(v)}${esc(v.name)}</div></td><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out}</td><td class="mono"><b>${hrs(a.minutes)}h</b></td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`; }).join('')}
   </tbody></table></div>${rows.length > 60 ? `<p class="hint" style="margin:12px 0 0">Showing the latest 60 of ${rows.length}. The export includes everything.</p>` : ''}</div>`;
 };
 
