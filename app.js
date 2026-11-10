@@ -27,6 +27,8 @@ const P = {
   x: '<path d="M6 6l12 12M18 6 6 18"/>',
   join: '<circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/>',
   warn: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  spark: '<path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/>',
   moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
 };
 const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
@@ -304,6 +306,24 @@ VIEWS.volunteer.shifts = () => {
   <div class="card"><div class="card-head"><h3>Changes</h3></div><div class="list">${past.map(b => `<div class="item"><div class="grow"><b>${fd(b.date)} · ${esc(b.store)}</b><span class="small muted mono">${b.start}–${b.end}</span></div>${b.status === 'cancelled' ? '<span class="st bad">Cancelled</span>' : '<span class="st">Past</span>'}</div>`).join('') || empty('repeat', 'Cancellations will show here')}</div></div></div></div>`;
 };
 
+function badges(v) {
+  const vis = S.attendance.filter(a => a.volId === v.id && a.out), h = approvedMin(v.id) / 60;
+  const weekend = vis.filter(a => [0, 6].includes(new Date(a.date + 'T12:00').getDay())).length;
+  const stores = new Set(vis.map(a => a.store)).size, early = vis.filter(a => toMin(a.in) <= 10 * 60).length;
+  const B = [
+    ['First shift', 'spark', vis.length >= 1, 'Complete one visit', 1, Math.min(1, vis.length)],
+    ['10 hours', 'clock', h >= 10, '10 approved hours', 10, h],
+    ['25 hours', 'clock', h >= 25, '25 approved hours', 25, h],
+    ['50 hours', 'award', h >= 50, '50 approved hours', 50, h],
+    ['Weekend regular', 'cal', weekend >= 3, '3 weekend visits', 3, weekend],
+    ['Store explorer', 'pin', stores >= 2, 'Volunteer at 2 stores', 2, stores],
+    ['Early bird', 'sun', early >= 3, '3 visits starting by 10:00', 3, early],
+    ['100 hours', 'award', h >= 100, '100 approved hours', 100, h],
+  ];
+  const got = B.filter(b => b[2]).length;
+  return `<div class="card" style="margin-top:16px"><div class="card-head"><div><h3>Badges</h3><span class="small muted">${got} of ${B.length} earned · awarded automatically from your visits</span></div></div>
+    <div class="badges">${B.map(([t, i, ok, need, goal, cur]) => `<div class="badge ${ok ? 'got' : ''}" title="${ok ? 'Earned' : need}"><div class="medal">${ic(i)}</div><b>${t}</b><small>${ok ? 'Earned' : `${Math.floor(Math.min(cur, goal) * 10) / 10} / ${goal}`}</small>${ok ? '' : `<span class="b-bar"><i style="width:${Math.min(100, cur / goal * 100)}%"></i></span>`}</div>`).join('')}</div></div>`;
+}
 function heatmap(v) {
   const weeks = 20, end = today(), dow = (new Date(end + 'T12:00').getDay() + 6) % 7, start = addDays(end, -(weeks - 1) * 7 - dow);
   const by = {}; S.attendance.filter(a => a.volId === v.id && a.out).forEach(a => { by[a.date] = (by[a.date] || 0) + a.minutes; });
@@ -333,7 +353,7 @@ VIEWS.volunteer.hours = () => {
   return head('Official record', 'Hours & certificate', 'Every visit you scan in for, approved by the store team.', `<button class="btn" data-action="export" data-vol="${v.id}">${ic('dl')}Download my record</button>`) +
   `<div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)"><div class="card ring-card">${ring(h, h < 50 ? 50 : nextMilestone(h))}<div><div class="eyebrow">Approved</div><b class="mono" style="font-size:22px">${hrs(m)} hrs</b><div class="eyebrow" style="margin-top:10px">Waiting for approval</div><b class="mono" style="font-size:16px">${hrs(pendingMin(v.id))} hrs</b></div></div>
   <div class="card"><div class="card-head"><h3>${ic('award')}50-hour certificate</h3>${v.wantsCert ? '<span class="st ok">Opted in</span>' : '<span class="st">Not needed</span>'}</div>${certBox}</div></div>
-  ${heatmap(v)}<div class="card" style="margin-top:16px"><div class="card-head"><h3>Visit log</h3><span class="small muted">${rows.length} visits</span></div>
+  ${badges(v)}${heatmap(v)}<div class="card" style="margin-top:16px"><div class="card-head"><h3>Visit log</h3><span class="small muted">${rows.length} visits</span></div>
   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged</th><th>Status</th></tr></thead><tbody>
   ${rows.map(a => `<tr><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out || '…'}</td><td class="mono">${a.out ? hrs(a.minutes) + 'h' : '–'}</td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`).join('')}</tbody></table></div></div>`;
 };
