@@ -194,10 +194,25 @@ function weekStrip(v) {
       ${done.length ? '' : bs.map(b => `<span class="blk">${b.start}<br>${b.end}</span>`).join('')}</div>`;
   }).join('')}</div>`;
 }
+function firstSteps(v) {
+  const booked = upcoming(v.id).length > 0;
+  const steps = [
+    [true, 'Induction done', 'Your team leader approved you. Welcome aboard.'],
+    [booked, 'Book your first shift', booked ? 'Booked. See you there.' : 'Any day, any store, from 30 minutes.', booked ? '' : `<button class="btn primary sm" data-action="tab" data-tab="book">${ic('plus')}Book now</button>`],
+    [false, 'Scan in at the till', 'Show the QR code on the tag above when you arrive.'],
+    [false, 'Scan out when you leave', 'Your hours log themselves. Nothing to fill in.'],
+    [false, 'Your first thank-you', 'Arrives by email after your first shift.'],
+  ];
+  const done = steps.filter(x => x[0]).length;
+  return `<div class="card onboard" style="margin-top:16px"><div class="onboard-head"><div><span class="kicker">Getting started</span><h2>Your first shift, step by step</h2></div>
+    <div class="onboard-meter"><b class="mono">${done}/${steps.length}</b><span class="mini-bar"><i style="width:${done / steps.length * 100}%"></i></span></div></div>
+    <ol class="onboard-steps">${steps.map(([ok, t, d, act], i) => `<li class="${ok ? 'ok' : i === done ? 'now' : ''}"><i>${ok ? ic('check') : i + 1}</i><div class="grow"><b>${t}</b><span>${d}</span></div>${act || ''}</li>`).join('')}</ol></div>`;
+}
 VIEWS.volunteer.home = () => {
   const v = me(), m = approvedMin(v.id), h = m / 60, next = upcoming(v.id)[0], floor = openAtt(v.id);
   const target = v.wantsCert && h < 50 ? 50 : nextMilestone(h);
   const until = next ? daysBetween(today(), next.date) : null;
+  const fresh = !S.attendance.some(a => a.volId === v.id);
   const ticket = floor
     ? `<div class="main"><span class="label">You're checked in</span><h2>${esc(floor.store)} store</h2><div class="when">since ${floor.in}<span>${ic('clock')}Scan again when you leave</span></div></div><div class="stub"><span class="st live">Live</span></div>`
     : next ? `<div class="main"><span class="label">Your next shift</span><h2>${relDay(next.date)}</h2>
@@ -206,14 +221,14 @@ VIEWS.volunteer.home = () => {
         <div class="stub">${until === 0 ? `<small>starts</small><b class="time">${next.start}</b>` : `<b>${until}</b><small>${until === 1 ? 'day' : 'days'}</small>`}</div>`
     : `<div class="main"><span class="label">Nothing booked</span><h2>Come in when it suits you</h2><div class="when"><span>Even an hour helps the team.</span></div><div class="actions"><button class="btn primary sm" data-action="tab" data-tab="book">${ic('plus')}Book a shift</button></div></div><div class="stub"><b>–</b><small>days</small></div>`;
   const marks = MILESTONES.filter(x => x <= Math.max(target, 50)).map(x => `<div class="${h >= x ? 'hit' : x === target ? 'next' : ''}"><i></i><span class="mono">${x} hrs</span>${x === 50 && v.wantsCert ? '<span class="small">certificate</span>' : ''}</div>`).join('');
-  return `${head(fd(today(), { weekday: 'long', day: 'numeric', month: 'long' }), `Hi ${first(v)}, good to see you`, '')}
+  return `${head(fd(today(), { weekday: 'long', day: 'numeric', month: 'long' }), fresh ? `Welcome to the team, ${first(v)}` : `Hi ${first(v)}, good to see you`, '')}
   <div class="bento">
     <div class="ticket">${ticket}</div>
     <div class="card ring-card">${ring(h, target)}<div><div class="eyebrow" style="margin-bottom:10px"><span class="mono">${hrs(target * 60 - m)}</span> hrs to your next milestone</div><div class="marks">${marks}</div></div></div>
     <div class="swing"><small>Show at the till</small><div class="qr">${qr(v.code)}</div><b>${v.code}</b><small>Scan when you arrive and leave</small></div>
   </div>
   <div class="card" style="margin-top:16px"><div class="card-head"><h3>Your next 7 days</h3><button class="btn sm" data-action="tab" data-tab="book">${ic('plus')}Add a shift</button></div>${weekStrip(v)}</div>
-  <div class="stats" style="margin-top:16px">
+  ${fresh ? firstSteps(v) : `<div class="stats" style="margin-top:16px">
     <div><span>Approved hours</span><b>${hrs(m)}</b><span>${pendingMin(v.id) ? hrs(pendingMin(v.id)) + ' hrs waiting' : 'all confirmed'}</span></div>
     <div><span>Shifts done</span><b>${S.attendance.filter(a => a.volId === v.id && a.out).length}</b><span>since ${fd(v.joined, { month: 'short', year: 'numeric' })}</span></div>
     <div><span>Booked ahead</span><b>${upcoming(v.id).length}</b><span>shifts</span></div>
@@ -225,7 +240,7 @@ VIEWS.volunteer.home = () => {
     <div class="card"><div class="card-head"><h3>Recent visits</h3><button class="btn sm" data-action="tab" data-tab="hours">Full record ${ic('arrow')}</button></div>
       <div class="list">${S.attendance.filter(a => a.volId === v.id).sort((a, b) => (b.date + b.in).localeCompare(a.date + a.in)).slice(0, 4).map(a => `
         <div class="item"><div class="grow"><b>${fd(a.date)} · ${esc(a.store)}</b><span class="small muted mono">${a.in}–${a.out || '…'}${a.out ? ' · ' + hrs(a.minutes) + 'h' : ''}</span></div>${srcTag(a)}${statusSt(a)}</div>`).join('') || empty('clock', 'No visits yet')}</div></div>
-  </div>`;
+  </div>`}`;
 };
 
 /* --- visual shift picker --- */
@@ -429,7 +444,7 @@ VIEWS.manager.insights = () => {
   <div class="card"><div class="card-head"><h3>Weekly hours</h3><span class="small muted">8 weeks</span></div>${area(weeks)}<div class="cols" style="display:none">
     ${weeks.map(([s, m], i) => `<div class="col"><em>${hrs(m)}</em><i class="${i === 7 ? 'cur' : ''}" style="height:${Math.max(4, m / wmx * 120)}px;animation-delay:${i * 50}ms"></i><small>${fd(s, { day: 'numeric', month: 'short' })}</small></div>`).join('')}</div></div></div>
   <div class="card" style="margin-top:16px"><div class="card-head"><div><h3>${ic('mail')}Automatic thank-you emails</h3><span class="small muted">Each scan-out checks for a first shift, 10 / 25 / 50 / 100 hours, or a return after a break. Links to Priority 2.</span></div></div>
-    <div class="list">${S.emails.slice(0, 6).map(e => { const v = vol(e.volId); return v ? `<div class="item">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${e.kind === 'welcome' ? 'Welcome email' : e.kind + ' milestone'} · ${fd(e.date)}</span></div><button class="btn sm" data-action="email" data-id="${e.id}">View email</button></div>` : ''; }).join('')}</div></div>`;
+    <div class="list">${S.emails.slice(0, 6).map(e => { const v = vol(e.volId); return v ? `<div class="item">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${e.kind === 'welcome' ? 'Welcome email' : e.kind === 'first shift' ? 'First shift' : e.kind + ' milestone'} · ${fd(e.date)}</span></div><button class="btn sm" data-action="email" data-id="${e.id}">View email</button></div>` : ''; }).join('')}</div></div>`;
 };
 
 /* ---------- modals ---------- */
@@ -439,6 +454,8 @@ function emailHTML(v, kind) {
     ? ['Welcome to Thrift for Good', `<p>Hi ${f},</p><p>Your induction is done and your volunteer portal is ready. Book your first shift at whatever time suits you, then show your QR code at the till when you arrive. Your hours log themselves.</p><p>See you soon,<br>The Thrift for Good team</p>`]
     : kind === 'quiet'
     ? ['We miss you at Thrift for Good', `<p>Hi ${f},</p><p>It's been a little while since your last shift at ${esc(v.store)}. Life gets busy, we completely understand.</p><p>If you'd like to come back, book any time that suits you, even just an hour. And if you need a break or want to step away, just reply and tell us. No pressure at all.</p><p>Warmly,<br>The Thrift for Good team</p>`]
+    : kind === 'first shift'
+    ? [`Thank you for your first shift, ${f}`, `<p>Hi ${f},</p><p>Thank you for coming in for your first shift at Thrift for Good. We hope you enjoyed it, and that the team made you feel at home.</p><p>Your hours are already on your record. Book your next shift whenever suits you.</p><p>With thanks,<br>The Thrift for Good team</p>`]
     : [`${kind}. Thank you, ${f}`, `<p>Hi ${f},</p><p>You've just passed <b>${kind}</b> volunteering with Thrift for Good. That's ${kind} of sorting, styling and helping customers, and every one of them supports children's charities.</p><p>We notice the effort you put in and we're very grateful.</p><p>With thanks,<br>The Thrift for Good team</p>`];
   return `<div class="email"><header><span><b>To</b> ${esc(v.email)}</span><span><b>Subject</b> ${subject}</span></header><div>${body}</div></div>`;
 }
@@ -572,9 +589,10 @@ document.addEventListener('submit', e => {
   if (kind === 'checkout') {
     const at = S.attendance.find(x => x.id === f.dataset.id), m = toMin(d.out) - toMin(d.in);
     if (m <= 0) return toast('Leaving time needs to be after arrival', 'warn');
-    const before = approvedMin(at.volId), v = vol(at.volId);
+    const before = approvedMin(at.volId), v = vol(at.volId), isFirst = !S.attendance.some(x => x.volId === at.volId && x.out);
     Object.assign(at, { in: d.in, out: d.out, minutes: m, status: 'approved' });
-    logScan(v, 'out', d.out); closeModal(); checkMilestones(at.volId, before); save(); render();
+    logScan(v, 'out', d.out); closeModal(); checkMilestones(at.volId, before);
+    if (isFirst) { S.emails.unshift({ id: uid(), volId: v.id, kind: 'first shift', date: today() }); setTimeout(() => toast(`First-shift thank-you sent to <b>${esc(v.name)}</b>`, 'mail'), 700); } save(); render();
     toast(`<b>${esc(v.name)}</b> scanned out. ${hrs(m)} hrs logged automatically.`);
   }
   if (kind === 'join') {
