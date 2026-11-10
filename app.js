@@ -1,4 +1,4 @@
-/* TFG Volunteer Portal — concept prototype. All data is sample data held in the browser. */
+/* TFG Volunteer Portal - concept prototype. All data is sample data held in the browser. */
 const STORES = ['Al Quoz', 'JLT', 'Dubai Hills', 'Alserkal'];
 const OPEN = '09:00', CLOSE = '21:00';
 const MILESTONES = [10, 25, 50, 100, 200];
@@ -60,7 +60,7 @@ function seed() {
   for (let i = 1; i <= 4; i++) book('v1', 'JLT', addDays(t, i * 7 - 3), '10:00', '12:00', ser);
   book('v1', 'Alserkal', addDays(t, 2), '15:30', '18:00');
   book('v2', 'Al Quoz', addDays(t, 1), '09:30', '13:30');
-  s.attendance.push({ id: uid(), volId: 'v2', store: 'Al Quoz', date: addDays(t, -2), in: '09:30', out: '14:15', minutes: 285, source: 'manual', status: 'pending', note: 'Forgot to scan out — stayed late for sorting donations' });
+  s.attendance.push({ id: uid(), volId: 'v2', store: 'Al Quoz', date: addDays(t, -2), in: '09:30', out: '14:15', minutes: 285, source: 'manual', status: 'pending', note: 'Forgot to scan out - stayed late for sorting donations' });
   s.attendance.push({ id: uid(), volId: 'v7', store: 'Dubai Hills', date: addDays(t, -1), in: '17:00', out: '19:30', minutes: 150, source: 'manual', status: 'pending', note: 'Phone died, no QR' });
   s.certs.push({ id: uid(), volId: 'v4', date: addDays(t, -3), status: 'pending', hours: 64 });
   s.emails.push({ id: uid(), volId: 'v4', kind: '50 hours', date: addDays(t, -12) });
@@ -95,7 +95,7 @@ function modal(html) { $('#modal-root').innerHTML = `<div class="backdrop" data-
 function closeModal() { $('#modal-root').innerHTML = ''; }
 function qr(text, cell = 5) { try { const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: cell, margin: 0, scalable: true }); } catch { return `<div style="width:150px;height:150px;display:grid;place-items:center;line-height:1.3">${esc(text)}</div>`; } }
 const storeOpts = sel => STORES.map(s => `<option ${s === sel ? 'selected' : ''}>${s}</option>`).join('');
-const statusPill = a => !a.out ? '<span class="pill blue">● On floor</span>' : a.status === 'approved' ? '<span class="pill green">Approved</span>' : '<span class="pill amber">Awaiting approval</span>';
+const statusPill = a => !a.out ? '<span class="pill blue">On floor</span>' : a.status === 'approved' ? '<span class="pill green">Approved</span>' : '<span class="pill amber">Awaiting approval</span>';
 const srcPill = a => a.source === 'qr' ? '<span class="pill">QR scan</span>' : '<span class="pill">Manual</span>';
 
 /* ---------- milestone engine (Priority 2 hook) ---------- */
@@ -105,7 +105,7 @@ function checkMilestones(volId, beforeMin) {
   const v = vol(volId);
   for (const m of hit) {
     S.emails.unshift({ id: uid(), volId, kind: m + ' hours', date: today() });
-    toast(`✉️ Auto thank-you sent to <b>${esc(v.name)}</b> — ${m} hours milestone`);
+    toast(`Auto thank-you sent to <b>${esc(v.name)}</b> - ${m} hours milestone`);
   }
 }
 
@@ -135,26 +135,26 @@ function volPicker() {
   return `<select data-action="me" style="width:auto">${act.map(v => `<option value="${v.id}" ${v.id === S.me ? 'selected' : ''}>Viewing as ${esc(v.name)}</option>`).join('')}</select>`;
 }
 function shiftItem(b, actions = true) {
-  const series = b.series ? '<span class="pill blue">↻ Weekly</span>' : '';
+  const series = b.series ? '<span class="pill blue">Weekly</span>' : '';
   return `<div class="item"><div class="date-chip"><small>${fmtDate(b.date, { month: 'short' })}</small><b>${fmtDate(b.date, { day: 'numeric' })}</b></div>
-    <div class="grow"><b>${b.start} – ${b.end} · ${esc(b.store)}</b><span class="small muted">${fmtDate(b.date, { weekday: 'long' })} · ${hrs(toMin(b.end) - toMin(b.start))} hrs ${b.date === today() ? '· <b style="display:inline;color:var(--coral)">Today</b>' : ''}</span></div>
+    <div class="grow"><b>${b.start} – ${b.end} · ${esc(b.store)}</b><span class="small muted">${fmtDate(b.date, { weekday: 'long' })} · ${hrs(toMin(b.end) - toMin(b.start))} hrs ${b.date === today() ? '· <span class="today-tag">Today</span>' : ''}</span></div>
     ${series}${actions ? `<button class="btn sm" data-action="edit-shift" data-id="${b.id}">Change</button><button class="btn sm danger" data-action="cancel-shift" data-id="${b.id}">Cancel</button>` : ''}</div>`;
 }
 VIEWS.volunteer.home = () => {
   const v = me(), m = approvedMin(v.id), h = m / 60, next = upcoming(v.id)[0];
   const target = v.wantsCert && h < 50 ? 50 : nextMilestone(h);
   const onFloor = openAtt(v.id);
-  return `<div class="page-head"><div><h1>Welcome back, ${esc(v.name.split(' ')[0])} 👋</h1><p>Thank you for giving your time to Thrift for Good.</p></div>${volPicker()}</div>
+  return `<div class="page-head"><div><h1>Welcome back, ${esc(v.name.split(' ')[0])}</h1><p>Thank you for giving your time to Thrift for Good.</p></div>${volPicker()}</div>
   <div class="grid g3">
     <div class="card hero span2">
       <div class="eyebrow">${onFloor ? 'You are checked in' : 'Your next shift'}</div>
       ${onFloor ? `<h2>On the floor at ${esc(onFloor.store)} since ${onFloor.in}</h2><p class="muted">Scan your QR at the till again when you leave.</p>`
         : next ? `<h2>${fmtDate(next.date, { weekday: 'long', day: 'numeric', month: 'long' })}</h2><p class="muted">${next.start} – ${next.end} · ${esc(next.store)} store ${next.series ? '· repeats weekly' : ''}</p>
         <div class="row" style="margin-top:14px"><button class="btn ghost-light" data-action="edit-shift" data-id="${next.id}">Change time</button><button class="btn ghost-light" data-action="cancel-shift" data-id="${next.id}">Can't make it</button></div>`
-        : `<h2>No shift booked yet</h2><p class="muted">Pick any time that suits you — even an hour helps.</p><div class="row" style="margin-top:14px"><button class="btn coral" data-action="tab" data-tab="book">Book a shift</button></div>`}
+        : `<h2>No shift booked yet</h2><p class="muted">Pick any time that suits you - even an hour helps.</p><div class="row" style="margin-top:14px"><button class="btn coral" data-action="tab" data-tab="book">Book a shift</button></div>`}
       <div style="margin-top:22px"><div class="row between small"><span>${hrs(m)} approved hours</span><span>${v.wantsCert && h < 50 ? 'Certificate at 50' : 'Next milestone ' + target}</span></div>
       <div class="progress" style="margin-top:8px"><i style="width:${Math.min(100, h / target * 100)}%"></i></div>
-      <div class="milestones">${MILESTONES.filter(x => x <= target).map(x => `<span>${h >= x ? '★' : '○'} ${x}h</span>`).join('')}</div></div>
+      <div class="milestones">${MILESTONES.filter(x => x <= target).map(x => `<span class="${h >= x ? 'hit' : ''}">${x}h</span>`).join('')}</div></div>
     </div>
     <div class="card"><div class="eyebrow">Your check-in code</div>
       <div style="margin-top:12px" class="qr-box">${qr(v.code)}</div>
@@ -197,7 +197,7 @@ function previewSlot(form) {
   const others = f.date ? S.bookings.filter(b => b.status === 'booked' && b.date === f.date && b.store === f.store && b.id !== form.dataset.id).length : 0;
   p.innerHTML = err ? `<div class="err">${err}</div>` : `<div class="slot-preview">${hrs(e - s)} hours at ${esc(f.store)} · ${fmtDate(f.date, { weekday: 'long', day: 'numeric', month: 'short' })}
     <div class="timeline">${[9, 12, 15, 18, 21].map(h => `<span style="left:${(h * 60 - o) / (c - o) * 100}%">${h}:00</span>`).join('')}<i style="left:${(s - o) / (c - o) * 100}%;width:${(e - s) / (c - o) * 100}%;opacity:.85"></i></div>
-    <div class="small" style="margin-top:8px;font-weight:500">${others ? `${others} other volunteer${others > 1 ? 's' : ''} booked at this store that day` : 'You’d be the first one in that day — the team will be glad of you'}</div></div>`;
+    <div class="small" style="margin-top:8px;font-weight:500">${others ? `${others} other volunteer${others > 1 ? 's' : ''} booked at this store that day` : 'You’d be the first one in that day - the team will be glad of you'}</div></div>`;
   form.querySelector('[type=submit]').disabled = !!err;
   return !err;
 }
@@ -206,11 +206,11 @@ VIEWS.volunteer.book = () => `<div class="page-head"><div><h1>Book a shift</h1><
     <label class="check" style="margin:16px 0"><input type="checkbox" name="repeat"> Repeat this every week for the next
       <select name="weeks" style="width:auto;padding:4px 8px"><option>4</option><option selected>8</option><option>12</option></select> weeks</label>
     <button class="btn primary" type="submit">Confirm booking</button></form></div>
-  <div class="card"><h3>How it works</h3><div class="list small" style="margin-top:8px">
-    <div class="item"><b>1</b><div class="grow">Pick your store, day and the hours <i>you</i> can do.</div></div>
-    <div class="item"><b>2</b><div class="grow">Change or cancel any time from <b style="display:inline">My shifts</b>. No need to message the team.</div></div>
-    <div class="item"><b>3</b><div class="grow">Scan your QR code at the till when you arrive and leave. Your hours log themselves.</div></div>
-    <div class="item"><b>4</b><div class="grow">Stayed longer? The QR scan records the real time automatically.</div></div></div></div></div>`;
+  <div class="card"><h3>How it works</h3><div class="list small steps" style="margin-top:8px">
+    <div class="item"><div class="grow">Pick your store, day and the hours <i>you</i> can do.</div></div>
+    <div class="item"><div class="grow">Change or cancel any time from <b style="display:inline">My shifts</b>. No need to message the team.</div></div>
+    <div class="item"><div class="grow">Scan your QR code at the till when you arrive and leave. Your hours log themselves.</div></div>
+    <div class="item"><div class="grow">Stayed longer? The QR scan records the real time automatically.</div></div></div></div></div>`;
 
 VIEWS.volunteer.shifts = () => {
   const v = me(), up = upcoming(v.id);
@@ -232,7 +232,7 @@ VIEWS.volunteer.hours = () => {
   return `<div class="page-head"><div><h1>Hours & certificate</h1><p>Your official volunteering record with Thrift for Good.</p></div><div class="row">${volPicker()}</div></div>
   <div class="grid g3"><div class="card">${statCardInner('Approved', hrs(m) + ' hrs')}<div style="height:12px"></div>${statCardInner('Awaiting approval', hrs(pendingMin(v.id)) + ' hrs')}</div>
   <div class="card span2"><div class="card-head"><h3>50-hour certificate</h3>${v.wantsCert ? '<span class="pill green">Opted in</span>' : '<span class="pill">Not needed</span>'}</div>${certBox}</div></div>
-  <div class="card" style="margin-top:18px"><div class="card-head"><h3>Hours log</h3><button class="btn sm" data-action="export" data-vol="${v.id}">⬇ Download my record</button></div>
+  <div class="card" style="margin-top:18px"><div class="card-head"><h3>Hours log</h3><button class="btn sm" data-action="export" data-vol="${v.id}">Download my record</button></div>
   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged by</th><th>Status</th></tr></thead><tbody>
   ${rows.map(a => `<tr><td>${fmtDate(a.date)}</td><td>${esc(a.store)}</td><td>${a.in} – ${a.out || '…'}</td><td>${a.out ? hrs(a.minutes) : '—'}</td><td>${srcPill(a)}</td><td>${statusPill(a)}</td></tr>`).join('')}</tbody></table></div></div>`;
 };
@@ -242,7 +242,7 @@ const statCardInner = (l, v) => `<div class="stat"><div class="eyebrow">${l}</di
 VIEWS.join.form = () => {
   if (UI.joined) {
     const v = vol(UI.joined);
-    return `<div class="card" style="max-width:560px;margin:20px auto;text-align:center"><div class="success-mark">✓</div><h1>Thanks, ${esc(v?.name.split(' ')[0] || '')}!</h1>
+    return `<div class="card" style="max-width:560px;margin:20px auto;text-align:center"><div class="success-mark">&#10003;</div><h1>Thanks, ${esc(v?.name.split(' ')[0] || '')}!</h1>
       <p class="muted">Your application is with the ${esc(v?.store || '')} team. Next step: a one-hour induction with a team leader. We'll email you a time. Once you're approved you'll be able to book shifts and get your check-in QR code.</p>
       <div class="row" style="justify-content:center;margin-top:18px"><button class="btn primary" data-action="goto" data-role="manager" data-tab="approvals">See it in the staff view →</button><button class="btn" data-action="join-again">Register someone else</button></div>
       <p class="hint" style="margin-top:16px">This replaces the current Airtable form. Applications go straight into the staff approval queue.</p></div>`;
@@ -260,7 +260,7 @@ VIEWS.join.form = () => {
     <div class="field"><label>Anything we should know? (optional)</label><textarea name="notes" rows="2" placeholder="Skills, languages, accessibility needs…"></textarea></div>
     <label class="check" style="margin-bottom:16px"><input type="checkbox" required> I agree to Thrift for Good's volunteer code of conduct and for my hours to be stored for my record.</label>
     <button class="btn primary" type="submit">Submit application</button></form>
-  <div class="card"><h3>Your journey</h3><div class="list small" style="margin-top:8px">
+  <div class="card"><h3>Your journey</h3><div class="list small steps" style="margin-top:8px">
     ${[['Apply', 'This form'], ['Induction', '1 hour with a team leader'], ['Approved', 'Get your portal and QR code'], ['Book & volunteer', 'Any hours that suit you'], ['Celebrate', 'Milestones, badges, certificate']].map(([a, b], i) => `<div class="item"><div class="avatar" style="background:${i ? 'var(--surface-2);color:var(--ink-2)' : 'var(--green)'}">${i + 1}</div><div class="grow"><b>${a}</b><span class="muted">${b}</span></div></div>`).join('')}</div></div></div>`;
 };
 
@@ -279,8 +279,8 @@ VIEWS.manager.today = () => {
     <div class="card span2"><div class="card-head"><h3>Expected today</h3><span class="pill">${exp.length} booked</span></div><div class="list">
     ${exp.map(b => { const v = vol(b.volId), o = openAtt(b.volId), d = done.find(a => a.volId === b.volId);
       return `<div class="item">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${b.start} – ${b.end} · ${esc(b.store)}</span></div>
-      ${o ? `<span class="pill blue">● In since ${o.in}</span><button class="btn sm primary" data-action="scan" data-code="${v.code}">Scan out</button>`
-        : d ? `<span class="pill green">✓ ${hrs(d.minutes)} hrs logged</span>` : `<button class="btn sm" data-action="scan" data-code="${v.code}">Scan in</button>`}</div>`; }).join('') || '<div class="empty">No bookings today</div>'}
+      ${o ? `<span class="pill blue">In since ${o.in}</span><button class="btn sm primary" data-action="scan" data-code="${v.code}">Scan out</button>`
+        : d ? `<span class="pill green">${hrs(d.minutes)} hrs logged</span>` : `<button class="btn sm" data-action="scan" data-code="${v.code}">Scan in</button>`}</div>`; }).join('') || '<div class="empty">No bookings today</div>'}
     </div></div></div>
   <div class="grid g2" style="margin-top:18px">
     <div class="card"><div class="card-head"><h3>On the floor now</h3><span class="pill blue">${floor.length}</span></div><div class="list">
@@ -293,14 +293,14 @@ VIEWS.manager.approvals = () => {
   const nv = S.volunteers.filter(v => v.status === 'pending');
   const hp = S.attendance.filter(a => a.status === 'pending' && a.out);
   const cr = S.certs.filter(c => c.status === 'pending');
-  const sect = (title, n, body) => `<div class="card"><div class="card-head"><h3>${title}</h3><span class="pill ${n ? 'coral' : 'green'}">${n || 'All clear'}</span></div><div class="list">${body || '<div class="empty">Nothing waiting ✓</div>'}</div></div>`;
+  const sect = (title, n, body) => `<div class="card"><div class="card-head"><h3>${title}</h3><span class="pill ${n ? 'coral' : 'green'}">${n || 'All clear'}</span></div><div class="list">${body || '<div class="empty">Nothing waiting</div>'}</div></div>`;
   return `<div class="page-head"><div><h1>Approvals</h1><p>Everything that needs a staff decision, in one place.</p></div></div>
   <div class="grid g3">
-  ${sect('New volunteers', nv.length, nv.map(v => `<div class="item" style="flex-wrap:wrap">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${esc(v.store)} · applied ${fmtDate(v.joined)}<br>${esc(v.availability || '')}${v.wantsCert ? ' · wants certificate' : ''}</span></div>
+  ${sect('New volunteers', nv.length, nv.map(v => `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${esc(v.store)} · applied ${fmtDate(v.joined)}<br>${esc(v.availability || '')}${v.wantsCert ? ' · wants certificate' : ''}</span></div>
      <div class="row"><button class="btn sm primary" data-action="approve-vol" data-id="${v.id}">Approve after induction</button><button class="btn sm danger" data-action="decline-vol" data-id="${v.id}">Decline</button></div></div>`).join(''))}
-  ${sect('Hours to confirm', hp.length, hp.map(a => { const v = vol(a.volId); return `<div class="item" style="flex-wrap:wrap">${avatar(v)}<div class="grow"><b>${esc(v.name)} · ${hrs(a.minutes)} hrs</b><span class="small muted">${fmtDate(a.date)} · ${esc(a.store)} · ${a.in}–${a.out}${a.note ? '<br>“' + esc(a.note) + '”' : ''}</span></div>
+  ${sect('Hours to confirm', hp.length, hp.map(a => { const v = vol(a.volId); return `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)} · ${hrs(a.minutes)} hrs</b><span class="small muted">${fmtDate(a.date)} · ${esc(a.store)} · ${a.in}–${a.out}${a.note ? '<br>“' + esc(a.note) + '”' : ''}</span></div>
      <div class="row"><button class="btn sm primary" data-action="approve-hrs" data-id="${a.id}">Approve</button><button class="btn sm danger" data-action="reject-hrs" data-id="${a.id}">Reject</button></div></div>`; }).join(''))}
-  ${sect('Certificate requests', cr.length, cr.map(c => { const v = vol(c.volId); return `<div class="item" style="flex-wrap:wrap">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${hrs(approvedMin(v.id))} approved hrs · requested ${fmtDate(c.date)}</span></div>
+  ${sect('Certificate requests', cr.length, cr.map(c => { const v = vol(c.volId); return `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${hrs(approvedMin(v.id))} approved hrs · requested ${fmtDate(c.date)}</span></div>
      <div class="row"><button class="btn sm" data-action="preview-cert" data-id="${c.id}">Preview</button><button class="btn sm primary" data-action="issue-cert" data-id="${c.id}">Issue</button></div></div>`; }).join(''))}
   </div>`;
 };
@@ -311,7 +311,7 @@ VIEWS.manager.hours = () => {
   const total = rows.filter(a => a.status === 'approved').reduce((t, a) => t + a.minutes, 0);
   return `<div class="page-head"><div><h1>Hours log</h1><p>The official record of volunteer hours, ready to export for CDA.</p></div>
     <div class="row"><select data-action="filter" style="width:auto">${['All', ...STORES].map(s => `<option ${s === f ? 'selected' : ''}>${s}</option>`).join('')}</select>
-    <button class="btn" data-action="manual">+ Manual entry</button><button class="btn primary" data-action="export">⬇ Export CSV</button></div></div>
+    <button class="btn" data-action="manual">+ Manual entry</button><button class="btn primary" data-action="export">Export CSV</button></div></div>
   <div class="grid g4" style="margin-bottom:18px">${statCard('Approved hours', hrs(total), f === 'All' ? 'all stores' : f)}${statCard('Entries', rows.length, 'shown below')}
     ${statCard('Logged by QR', Math.round(rows.filter(a => a.source === 'qr').length / Math.max(1, rows.length) * 100) + '%', 'no staff typing needed')}${statCard('Pending', rows.filter(a => a.status === 'pending').length, 'awaiting approval')}</div>
   <div class="card"><div class="table-wrap"><table><thead><tr><th>Volunteer</th><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged by</th><th>Status</th></tr></thead><tbody>
@@ -323,7 +323,7 @@ VIEWS.manager.people = () => {
   const act = S.volunteers.filter(v => v.status === 'active').map(v => ({ v, m: approvedMin(v.id), last: lastVisit(v.id) })).sort((a, b) => b.m - a.m);
   const quiet = act.filter(x => x.last && daysBetween(x.last, today()) > 30);
   return `<div class="page-head"><div><h1>Volunteers</h1><p>${act.length} active · ${S.volunteers.filter(v => v.status === 'pending').length} awaiting induction</p></div></div>
-  ${quiet.length ? `<div class="card" style="margin-bottom:18px;border-color:var(--amber);background:var(--amber-soft)"><div class="row between"><div><b>🌙 ${quiet.length} volunteer${quiet.length > 1 ? 's have' : ' has'} gone quiet</b><div class="small muted">No visit in over 30 days: ${quiet.map(x => esc(x.v.name)).join(', ')}</div></div><button class="btn" data-action="nudge" data-id="${quiet[0].v.id}">Preview check-in email</button></div></div>` : ''}
+  ${quiet.length ? `<div class="notice"><div class="row between"><div><b>${quiet.length} volunteer${quiet.length > 1 ? 's have' : ' has'} gone quiet</b><div class="small muted">No visit in over 30 days: ${quiet.map(x => esc(x.v.name)).join(', ')}</div></div><button class="btn" data-action="nudge" data-id="${quiet[0].v.id}">Preview check-in email</button></div></div>` : ''}
   <div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Home store</th><th>Approved hours</th><th>Certificate</th><th>Last visit</th><th>Next shift</th></tr></thead><tbody>
   ${act.map(({ v, m, last }) => { const n = upcoming(v.id)[0], ago = last ? daysBetween(last, today()) : null; return `<tr><td><div class="row" style="flex-wrap:nowrap">${avatar(v)}<div><b>${esc(v.name)}</b><div class="small muted">${esc(v.email)}</div></div></div></td><td>${esc(v.store)}</td>
     <td><b>${hrs(m)}</b>${m / 60 >= 50 ? ' <span class="pill green">50+</span>' : ''}</td><td>${v.wantsCert ? (S.certs.some(c => c.volId === v.id && c.status === 'issued') ? '<span class="pill green">Issued</span>' : '<span class="pill blue">Opted in</span>') : '<span class="pill">Not needed</span>'}</td>
@@ -354,11 +354,11 @@ VIEWS.manager.insights = () => {
 /* ---------- modals ---------- */
 function emailHTML(v, kind) {
   const first = esc(v.name.split(' ')[0]);
-  if (kind === 'welcome') return `<div class="email"><header><b>To:</b> ${esc(v.email)}<br><b>Subject:</b> Welcome to Thrift for Good 💚</header><div><p>Hi ${first},</p><p>Welcome to the team! Your induction is complete and your volunteer portal is ready.</p><p>Book your first shift at any time that suits you and show your QR code at the till when you arrive. Your hours will log themselves.</p><p>See you soon,<br>The Thrift for Good team</p></div></div>`;
+  if (kind === 'welcome') return `<div class="email"><header><b>To:</b> ${esc(v.email)}<br><b>Subject:</b> Welcome to Thrift for Good</header><div><p>Hi ${first},</p><p>Welcome to the team! Your induction is complete and your volunteer portal is ready.</p><p>Book your first shift at any time that suits you and show your QR code at the till when you arrive. Your hours will log themselves.</p><p>See you soon,<br>The Thrift for Good team</p></div></div>`;
   const body = kind === 'quiet'
     ? `<p>Hi ${first},</p><p>We've missed you at ${esc(v.store)}! It's been a little while since your last shift. Life gets busy, we totally get it.</p><p>If you'd like to come back, you can book any time that suits you, even just an hour. And if you need a break or want to step away, just reply and let us know. No pressure at all.</p><p>Warmly,<br>The Thrift for Good team</p>`
     : `<p>Hi ${first},</p><p>You've just passed <b>${kind}</b> volunteering with Thrift for Good. That's ${kind} of sorting, styling and helping customers that goes straight to supporting children's charities.</p><p>We notice the effort you put in, and we're so grateful. Thank you for being part of the family.</p><p>With love,<br>The Thrift for Good team</p>`;
-  return `<div class="email"><header><b>To:</b> ${esc(v.email)}<br><b>Subject:</b> ${kind === 'quiet' ? 'We miss you at Thrift for Good 💚' : `🎉 ${kind} — thank you, ${first}!`}</header><div>${body}</div></div>`;
+  return `<div class="email"><header><b>To:</b> ${esc(v.email)}<br><b>Subject:</b> ${kind === 'quiet' ? 'We miss you at Thrift for Good' : `${kind} - thank you, ${first}!`}</header><div>${body}</div></div>`;
 }
 const MODALS = {
   edit(b) {
@@ -388,7 +388,7 @@ const MODALS = {
     const v = vol(c.volId);
     modal(`<div style="border:6px double var(--green);border-radius:12px;padding:30px;text-align:center;background:#fffdf6"><div class="eyebrow">Certificate of volunteering</div>
       <h1 style="margin:14px 0 6px">${esc(v.name)}</h1><p class="muted">has generously given</p><h2 style="color:var(--coral)">${hrs(approvedMin(v.id))} hours</h2>
-      <p class="muted">of volunteer service to Thrift for Good, supporting children's charities across the UAE.</p><div class="row between small muted" style="margin-top:22px"><span>${fmtDate(today(), { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>♻ Thrift for Good</span></div></div>
+      <p class="muted">of volunteer service to Thrift for Good, supporting children's charities across the UAE.</p><div class="row between small muted" style="margin-top:22px"><span>${fmtDate(today(), { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>Thrift for Good</span></div></div>
       <p class="hint">Template placeholder. We'll match TFG's real certificate design once shared.</p><div class="row" style="justify-content:flex-end"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="issue-cert" data-id="${c.id}">Issue & email</button></div>`);
   },
 };
@@ -396,14 +396,14 @@ const MODALS = {
 /* ---------- actions ---------- */
 function scan(code) {
   const v = S.volunteers.find(x => x.code.toLowerCase() === code.trim().toLowerCase());
-  if (!v) return toast('⚠️ Code not recognised');
-  if (v.status !== 'active') return toast(`⚠️ ${esc(v.name)} hasn't completed induction yet`);
+  if (!v) return toast('Code not recognised');
+  if (v.status !== 'active') return toast(`${esc(v.name)} hasn't completed induction yet`);
   const o = openAtt(v.id);
   if (o) return MODALS.checkout(o);
   const b = S.bookings.find(x => x.volId === v.id && x.date === today() && x.status === 'booked');
   const t = nowTime(), inT = toMin(t) >= toMin(OPEN) && toMin(t) < toMin(CLOSE) - 30 ? t : (b?.start || '10:00');
   S.attendance.push({ id: uid(), volId: v.id, store: b?.store || v.store, date: today(), in: inT, out: null, minutes: 0, source: 'qr', status: 'pending' });
-  save(); render(); toast(`✓ <b>${esc(v.name)}</b> checked in at ${inT}`);
+  save(); render(); toast(`<b>${esc(v.name)}</b> checked in at ${inT}`);
 }
 function downloadCSV(volId) {
   const rows = S.attendance.filter(a => a.out && (!volId || a.volId === volId)).sort((a, b) => a.date.localeCompare(b.date));
@@ -413,7 +413,7 @@ function downloadCSV(volId) {
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   const el = Object.assign(document.createElement('a'), { href: url, download: `tfg-volunteer-hours-${volId || 'all'}-${today()}.csv` });
   document.body.append(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast(`⬇ Exported ${rows.length} entries (CDA-ready CSV)`);
+  toast(`Exported ${rows.length} entries (CDA-ready CSV)`);
 }
 
 document.addEventListener('click', e => {
@@ -434,17 +434,17 @@ document.addEventListener('click', e => {
     case 'cancel-shift': { const b = S.bookings.find(x => x.id === id); if (confirm(`Cancel your ${b.start}–${b.end} shift on ${fmtDate(b.date)}?`)) { b.status = 'cancelled'; ok('Shift cancelled. The store team has been notified.'); } break; }
     case 'scan': scan(t.dataset.code); break;
     case 'manual': MODALS.manual(); break;
-    case 'approve-vol': { const v = vol(id); v.status = 'active'; S.emails.unshift({ id: uid(), volId: id, kind: 'welcome', date: today() }); ok(`✓ ${esc(v.name)} approved. Welcome email and QR code sent.`); break; }
+    case 'approve-vol': { const v = vol(id); v.status = 'active'; S.emails.unshift({ id: uid(), volId: id, kind: 'welcome', date: today() }); ok(`${esc(v.name)} approved. Welcome email and QR code sent.`); break; }
     case 'decline-vol': { const v = vol(id); if (confirm(`Decline ${v.name}'s application?`)) { S.volunteers = S.volunteers.filter(x => x.id !== id); ok('Application declined'); } break; }
-    case 'approve-hrs': { const at = S.attendance.find(x => x.id === id), before = approvedMin(at.volId); at.status = 'approved'; checkMilestones(at.volId, before); ok(`✓ ${hrs(at.minutes)} hrs approved for ${esc(vol(at.volId).name)}`); break; }
+    case 'approve-hrs': { const at = S.attendance.find(x => x.id === id), before = approvedMin(at.volId); at.status = 'approved'; checkMilestones(at.volId, before); ok(`${hrs(at.minutes)} hrs approved for ${esc(vol(at.volId).name)}`); break; }
     case 'reject-hrs': S.attendance = S.attendance.filter(x => x.id !== id); ok('Entry rejected'); break;
     case 'preview-cert': MODALS.cert(S.certs.find(c => c.id === id)); break;
-    case 'issue-cert': { const c = S.certs.find(x => x.id === id); c.status = 'issued'; c.decided = today(); closeModal(); ok(`🎓 Certificate issued and emailed to ${esc(vol(c.volId).name)}`); break; }
+    case 'issue-cert': { const c = S.certs.find(x => x.id === id); c.status = 'issued'; c.decided = today(); closeModal(); ok(`Certificate issued and emailed to ${esc(vol(c.volId).name)}`); break; }
     case 'req-cert': S.certs.push({ id: uid(), volId: S.me, date: today(), status: 'pending', hours: approvedMin(S.me) / 60 }); ok('Certificate requested. The team will confirm soon.'); break;
     case 'toggle-cert': me().wantsCert = true; ok('You’re opted in for the 50-hour certificate'); break;
     case 'export': downloadCSV(t.dataset.vol); break;
     case 'email': { const em = S.emails.find(x => x.id === id), v = vol(em.volId); modal(`<h2 style="margin-bottom:14px">Automated email</h2>${emailHTML(v, em.kind)}<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-action="close">Close</button></div>`); break; }
-    case 'nudge': modal(`<h2 style="margin-bottom:6px">“Going quiet” check-in</h2><p class="muted small">Sent automatically after 30 days without a visit.</p>${emailHTML(vol(id), 'quiet')}<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="close" onclick="setTimeout(()=>toast('✉️ Check-in email sent'),50)">Send now</button></div>`); break;
+    case 'nudge': modal(`<h2 style="margin-bottom:6px">“Going quiet” check-in</h2><p class="muted small">Sent automatically after 30 days without a visit.</p>${emailHTML(vol(id), 'quiet')}<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="close" onclick="setTimeout(()=>toast('Check-in email sent'),50)">Send now</button></div>`); break;
     case 'join-again': UI.joined = null; UI.chips = []; render(); break;
   }
 });
@@ -464,27 +464,27 @@ document.addEventListener('submit', e => {
     const n = d.repeat ? +d.weeks : 1, series = n > 1 ? uid() : null;
     for (let i = 0; i < n; i++) S.bookings.push({ id: uid(), volId: S.me, store: d.store, date: addDays(d.date, i * 7), start: d.start, end: d.end, series, status: 'booked' });
     save(); UI.tab.volunteer = 'shifts'; render();
-    toast(`✓ Booked ${n > 1 ? n + ' weekly shifts' : 'your shift'} at ${esc(d.store)}, ${d.start}–${d.end}`);
+    toast(`Booked ${n > 1 ? n + ' weekly shifts' : 'your shift'} at ${esc(d.store)}, ${d.start}–${d.end}`);
   }
   if (kind === 'edit') {
     if (!previewSlot(f)) return;
     const b = S.bookings.find(x => x.id === f.dataset.id);
     const targets = d.all && b.series ? S.bookings.filter(x => x.series === b.series && x.date >= b.date && x.status === 'booked') : [b];
     targets.forEach(x => { x.start = d.start; x.end = d.end; x.store = d.store; if (x === b) x.date = d.date; });
-    closeModal(); save(); render(); toast(`✓ Updated ${targets.length > 1 ? targets.length + ' shifts' : 'shift'}. No staff action needed.`);
+    closeModal(); save(); render(); toast(`Updated ${targets.length > 1 ? targets.length + ' shifts' : 'shift'}. No staff action needed.`);
   }
   if (kind === 'scan') { scan(d.code); f.reset(); }
   if (kind === 'manual') {
     const m = toMin(d.out) - toMin(d.in); if (m <= 0) { $('#merr').textContent = 'Out time must be after in time'; return; }
     S.attendance.push({ id: uid(), volId: d.volId, store: d.store, date: d.date, in: d.in, out: d.out, minutes: m, source: 'manual', status: 'pending', note: d.note });
-    closeModal(); save(); render(); toast(`✓ ${hrs(m)} hrs added for ${esc(vol(d.volId).name)}. Sent to Approvals.`);
+    closeModal(); save(); render(); toast(`${hrs(m)} hrs added for ${esc(vol(d.volId).name)}. Sent to Approvals.`);
   }
   if (kind === 'checkout') {
     const at = S.attendance.find(x => x.id === f.dataset.id), m = toMin(d.out) - toMin(d.in);
-    if (m <= 0) return toast('⚠️ Check-out must be after check-in');
+    if (m <= 0) return toast('Check-out must be after check-in');
     const before = approvedMin(at.volId);
     Object.assign(at, { in: d.in, out: d.out, minutes: m, status: 'approved' });
-    closeModal(); save(); render(); toast(`✓ <b>${esc(vol(at.volId).name)}</b> checked out · ${hrs(m)} hrs logged automatically`);
+    closeModal(); save(); render(); toast(`<b>${esc(vol(at.volId).name)}</b> checked out · ${hrs(m)} hrs logged automatically`);
     checkMilestones(at.volId, before); save(); render();
   }
   if (kind === 'join') {
