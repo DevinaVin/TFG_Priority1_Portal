@@ -640,3 +640,5 @@ button.swing{border:0;font:inherit;width:100%;cursor:zoom-in;display:block}
 #toasts{pointer-events:none}.toast{pointer-events:auto}
 .undo{margin-left:10px;background:rgba(255,255,255,.1);border:0;color:var(--accent-glow);font:600 12.5px Geist,sans-serif;padding:4px 10px;border-radius:8px;cursor:pointer}
 .undo:hover{background:rgba(255,255,255,.18)}
+.btn.btn-danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.btn-danger:hover{filter:brightness(.92)}

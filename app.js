@@ -132,6 +132,10 @@ function toast(html, icon = 'check') {
 function modal(title, sub, body) {
   $('#modal-root').innerHTML = `<div class="backdrop" data-action="close-bg"><div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><div><h2>${title}</h2>${sub ? `<p class="muted small" style="margin:4px 0 0">${sub}</p>` : ''}</div><button class="btn icon" data-action="close" aria-label="Close">${ic('x')}</button></div>${body}</div></div>`;
 }
+function ask(title, body, label, action, id = '', danger = false) {
+  modal(title, '', `<p class="muted" style="margin:-6px 0 20px">${body}</p><div class="row" style="justify-content:flex-end"><button class="btn" data-action="close">Cancel</button><button class="btn ${danger ? 'btn-danger' : 'primary'}" data-action="${action}" data-id="${id}">${label}</button></div>`);
+  $('.modal').style.width = 'min(420px,100%)';
+}
 const closeModal = () => { $('#modal-root').innerHTML = ''; };
 function qr(text, cell = 5) { try { const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: cell, margin: 0, scalable: true }); } catch { return `<div class="mono" style="width:124px;height:124px;display:grid;place-items:center;line-height:1.3">${esc(text)}</div>`; } }
 const statusSt = a => !a.out ? '<span class="st live">On floor</span>' : a.status === 'approved' ? '<span class="st ok">Approved</span>' : '<span class="st wait">Needs approval</span>';
@@ -626,7 +630,8 @@ document.addEventListener('click', e => {
     case 'tab': UI.tab[UI.role] = t.dataset.tab; closeModal(); render(); scrollTo(0, 0); break;
     case 'goto': UI.role = t.dataset.role; UI.tab[UI.role] = t.dataset.tab; render(); scrollTo(0, 0); break;
     case 'close': closeModal(); break;
-    case 'reset': if (confirm('Reset all demo data?')) { S = seed(); UI.joined = null; UI.chips = []; ok('Demo data reset', 'repeat'); } break;
+    case 'reset': ask('Reset the demo?', 'All bookings, scans and approvals go back to the sample data. Use this before presenting.', 'Reset data', 'do-reset'); break;
+    case 'do-reset': closeModal(); S = seed(); UI.joined = null; UI.chips = []; ok('Demo data reset', 'repeat'); break;
     case 'pick-date': f.date.value = t.dataset.d; updatePicker(f); break;
     case 'pick-store': f.store.value = t.dataset.s; updatePicker(f); break;
     case 'pick-slot': {
@@ -642,7 +647,8 @@ document.addEventListener('click', e => {
     case 'scan': scan(t.dataset.code); break;
     case 'manual': MODALS.manual(); break;
     case 'approve-vol': { const v = vol(id); v.status = 'active'; S.emails.unshift({ id: uid(), volId: id, kind: 'welcome', date: today() }); ok(`<b>${esc(v.name)}</b> approved. Welcome email and QR code sent.`, 'mail'); break; }
-    case 'decline-vol': { const v = vol(id); if (confirm(`Decline ${v.name}'s application?`)) { S.volunteers = S.volunteers.filter(x => x.id !== id); ok('Application declined', 'x'); } break; }
+    case 'decline-vol': { const v = vol(id); ask(`Decline ${esc(v.name)}?`, 'Their application is removed. They can apply again any time.', 'Decline', 'do-decline', id, true); break; }
+    case 'do-decline': { closeModal(); S.volunteers = S.volunteers.filter(x => x.id !== id); ok('Application declined', 'x'); break; }
     case 'approve-hrs': { const at = S.attendance.find(x => x.id === id), before = approvedMin(at.volId); at.status = 'approved'; checkMilestones(at.volId, before); ok(`${hrs(at.minutes)} hrs approved for <b>${esc(vol(at.volId).name)}</b>`); break; }
     case 'reject-hrs': S.attendance = S.attendance.filter(x => x.id !== id); ok('Entry rejected', 'x'); break;
     case 'preview-cert': MODALS.cert(S.certs.find(c => c.id === id)); break;
