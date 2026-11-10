@@ -270,6 +270,23 @@ VIEWS.volunteer.shifts = () => {
   <div class="card"><div class="card-head"><h3>Changes</h3></div><div class="list">${past.map(b => `<div class="item"><div class="grow"><b>${fd(b.date)} · ${esc(b.store)}</b><span class="small muted mono">${b.start}–${b.end}</span></div>${b.status === 'cancelled' ? '<span class="st bad">Cancelled</span>' : '<span class="st">Past</span>'}</div>`).join('') || empty('repeat', 'Cancellations will show here')}</div></div></div>`;
 };
 
+function heatmap(v) {
+  const weeks = 20, end = today(), dow = (new Date(end + 'T12:00').getDay() + 6) % 7, start = addDays(end, -(weeks - 1) * 7 - dow);
+  const by = {}; S.attendance.filter(a => a.volId === v.id && a.out).forEach(a => { by[a.date] = (by[a.date] || 0) + a.minutes; });
+  const lvl = m => !m ? 0 : m < 150 ? 1 : m < 210 ? 2 : 3;
+  let cells = '', months = '';
+  for (let w = 0; w < weeks; w++) {
+    const wd = addDays(start, w * 7);
+    months += `<span>${new Date(wd + 'T12:00').getDate() <= 7 ? fd(wd, { month: 'short' }) : ''}</span>`;
+    for (let d = 0; d < 7; d++) {
+      const day = addDays(start, w * 7 + d), m = by[day] || 0;
+      cells += day > end ? '<i class="future"></i>' : `<i class="l${lvl(m)}" title="${fd(day)}${m ? ' · ' + hrs(m) + ' hrs' : ''}"></i>`;
+    }
+  }
+  const visits = Object.keys(by).filter(d => d >= start).length;
+  return `<div class="card" style="margin-top:16px"><div class="card-head"><div><h3>Your last 20 weeks</h3><span class="small muted">${visits} visits · each square is a day</span></div><div class="heat-legend"><span>Less</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><span>More</span></div></div>
+    <div class="heat-wrap"><div class="heat-days"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span></div><div><div class="heat-months" style="grid-template-columns:repeat(${weeks},1fr)">${months}</div><div class="heat" style="grid-template-columns:repeat(${weeks},1fr)">${cells}</div></div></div></div>`;
+}
 VIEWS.volunteer.hours = () => {
   const v = me(), m = approvedMin(v.id), h = m / 60;
   const req = S.certs.filter(c => c.volId === v.id).sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -282,7 +299,7 @@ VIEWS.volunteer.hours = () => {
   return head('Official record', 'Hours & certificate', 'Every visit you scan in for, approved by the store team.', `<button class="btn" data-action="export" data-vol="${v.id}">${ic('dl')}Download my record</button>`) +
   `<div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)"><div class="card ring-card">${ring(h, h < 50 ? 50 : nextMilestone(h))}<div><div class="eyebrow">Approved</div><b class="mono" style="font-size:22px">${hrs(m)} hrs</b><div class="eyebrow" style="margin-top:10px">Waiting for approval</div><b class="mono" style="font-size:16px">${hrs(pendingMin(v.id))} hrs</b></div></div>
   <div class="card"><div class="card-head"><h3>${ic('award')}50-hour certificate</h3>${v.wantsCert ? '<span class="st ok">Opted in</span>' : '<span class="st">Not needed</span>'}</div>${certBox}</div></div>
-  <div class="card" style="margin-top:16px"><div class="card-head"><h3>Visit log</h3><span class="small muted">${rows.length} visits</span></div>
+  ${heatmap(v)}<div class="card" style="margin-top:16px"><div class="card-head"><h3>Visit log</h3><span class="small muted">${rows.length} visits</span></div>
   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged</th><th>Status</th></tr></thead><tbody>
   ${rows.map(a => `<tr><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out || '…'}</td><td class="mono">${a.out ? hrs(a.minutes) : '–'}</td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`).join('')}</tbody></table></div></div>`;
 };
@@ -380,10 +397,24 @@ VIEWS.manager.people = () => {
   (quiet.length ? `<div class="notice">${ic('moon')}<div class="grow"><b>${quiet.map(x => esc(x.v.name)).join(', ')} ${quiet.length > 1 ? 'have' : 'has'} gone quiet</b><div class="small muted">No visit in over 30 days. A friendly check-in goes out automatically.</div></div><button class="btn sm" data-action="nudge" data-id="${quiet[0].v.id}">${ic('mail')}Preview check-in</button></div>` : '') +
   `<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Home store</th><th>Hours</th><th>Certificate</th><th>Last visit</th><th>Next shift</th></tr></thead><tbody>
   ${list.map(({ v, m, last }) => { const n = upcoming(v.id)[0], ago = last ? daysBetween(last, today()) : null; return `<tr><td><div class="who-cell">${avatar(v)}<div><b style="font-weight:500">${esc(v.name)}</b><div class="small muted">${esc(v.email)}</div></div></div></td><td>${esc(v.store)}</td>
-    <td class="mono"><b>${hrs(m)}</b></td><td>${v.wantsCert ? (S.certs.some(c => c.volId === v.id && c.status === 'issued') ? '<span class="st ok">Issued</span>' : m >= 3000 ? '<span class="st wait">Eligible</span>' : '<span class="st">Working towards</span>') : '<span class="small muted">Not needed</span>'}</td>
+    <td><div class="mini"><b class="mono">${hrs(m)}</b><span class="mini-bar"><i style="width:${Math.min(100, m / 60 / (m >= 3000 ? nextMilestone(m / 60) : 50) * 100)}%"></i></span><small class="mono">/${m >= 3000 ? nextMilestone(m / 60) : 50}</small></div></td><td>${v.wantsCert ? (S.certs.some(c => c.volId === v.id && c.status === 'issued') ? '<span class="st ok">Issued</span>' : m >= 3000 ? '<span class="st wait">Eligible</span>' : '<span class="st">Working towards</span>') : '<span class="small muted">Not needed</span>'}</td>
     <td>${last ? (ago > 30 ? `<span class="st bad">${ago} days ago</span>` : `<span class="small">${ago === 0 ? 'Today' : ago + ' days ago'}</span>`) : '–'}</td><td class="small">${n ? `${relDay(n.date)} · <span class="mono">${n.start}</span>` : '<span class="muted">–</span>'}</td></tr>`; }).join('')}</tbody></table></div></div>`;
 };
 
+function area(weeks) {
+  const W = 560, H = 170, pt = 22, pb = 10, mx = Math.max(1, ...weeks.map(w => w[1])) * 1.15;
+  const x = i => (i + .5) * W / weeks.length, y = m => pt + (H - pt - pb) * (1 - m / mx);
+  const pts = weeks.map(([, m], i) => [x(i), y(m)]);
+  let d = 'M' + pts[0].join(' ');
+  for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], cx = (x0 + x1) / 2; d += ` C${cx} ${y0} ${cx} ${y1} ${x1} ${y1}`; }
+  const last = pts[pts.length - 1];
+  return `<svg class="area" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Weekly hours, last 8 weeks">
+    <defs><linearGradient id="ag" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0f6b4f" stop-opacity=".22"/><stop offset="1" stop-color="#0f6b4f" stop-opacity="0"/></linearGradient></defs>
+    ${[0.25, 0.5, 0.75].map(f => `<line x1="0" x2="${W}" y1="${pt + (H - pt - pb) * f}" y2="${pt + (H - pt - pb) * f}" class="grid-l"/>`).join('')}
+    <path d="${d} L${last[0]} ${H} L${pts[0][0]} ${H} Z" fill="url(#ag)"/>
+    <path d="${d}" class="line" pathLength="1"/>
+  </svg><div class="area-x">${weeks.map(([s, m]) => `<span><b class="mono">${hrs(m)}</b>${fd(s, { day: 'numeric', month: 'short' })}</span>`).join('')}</div>`;
+}
 VIEWS.manager.insights = () => {
   const appr = S.attendance.filter(a => a.status === 'approved' && a.out), since = addDays(today(), -28);
   const byStore = STORES.map(s => [s, appr.filter(a => a.store === s && a.date >= since).reduce((t, a) => t + a.minutes, 0)]).sort((a, b) => b[1] - a[1]);
@@ -395,7 +426,7 @@ VIEWS.manager.insights = () => {
   <div><span>Past 50 hours</span><b>${active().filter(v => approvedMin(v.id) >= 3000).length}</b><span>certificate eligible</span></div><div><span>Thank-yous sent</span><b>${S.emails.length}</b><span>automatically</span></div></div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)"><div class="card"><div class="card-head"><h3>Hours by store</h3></div><div class="bars">
     ${byStore.map(([s, m], i) => `<div class="bar-row"><span>${s}</span><div class="bar-track"><i style="width:${m / mx * 100}%;animation-delay:${i * 80}ms"></i></div><b>${hrs(m)}h</b></div>`).join('')}</div></div>
-  <div class="card"><div class="card-head"><h3>Weekly hours</h3><span class="small muted">8 weeks</span></div><div class="cols">
+  <div class="card"><div class="card-head"><h3>Weekly hours</h3><span class="small muted">8 weeks</span></div>${area(weeks)}<div class="cols" style="display:none">
     ${weeks.map(([s, m], i) => `<div class="col"><em>${hrs(m)}</em><i class="${i === 7 ? 'cur' : ''}" style="height:${Math.max(4, m / wmx * 120)}px;animation-delay:${i * 50}ms"></i><small>${fd(s, { day: 'numeric', month: 'short' })}</small></div>`).join('')}</div></div></div>
   <div class="card" style="margin-top:16px"><div class="card-head"><div><h3>${ic('mail')}Automatic thank-you emails</h3><span class="small muted">Each scan-out checks for a first shift, 10 / 25 / 50 / 100 hours, or a return after a break. Links to Priority 2.</span></div></div>
     <div class="list">${S.emails.slice(0, 6).map(e => { const v = vol(e.volId); return v ? `<div class="item">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${e.kind === 'welcome' ? 'Welcome email' : e.kind + ' milestone'} · ${fd(e.date)}</span></div><button class="btn sm" data-action="email" data-id="${e.id}">View email</button></div>` : ''; }).join('')}</div></div>`;

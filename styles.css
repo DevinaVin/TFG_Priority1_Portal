@@ -367,3 +367,38 @@ tr:last-child td{border-bottom:0}
 .ticket .stub b.time{font-size:24px}
 .dates{scrollbar-width:none;mask-image:linear-gradient(90deg,#000 92%,transparent)}
 .dates::-webkit-scrollbar{display:none}
+
+/* ---------- round 2 polish ---------- */
+.heat-wrap{display:grid;grid-template-columns:32px 1fr;gap:8px}
+.heat-days{display:grid;grid-template-rows:14px repeat(7,1fr);gap:4px;font:500 10.5px "Geist Mono",monospace;color:var(--ink-3);margin-top:4px}
+.heat-days span{display:flex;align-items:center}
+.heat-days span:first-child{grid-row:2}
+.heat-months{display:grid;gap:4px;height:14px;font:500 10.5px "Geist Mono",monospace;color:var(--ink-3);margin-bottom:4px;white-space:nowrap}
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:4px}
+.heat i,.heat-legend i{aspect-ratio:1;border-radius:4px;background:var(--sunk);display:block;transition:transform .2s var(--ease)}
+.heat i:hover{transform:scale(1.3);box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--ink)}
+.heat i.l1,.heat-legend i.l1{background:#b8d6c6}.heat i.l2,.heat-legend i.l2{background:#5fa283}.heat i.l3,.heat-legend i.l3{background:var(--accent)}
+.heat i.future{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.heat-legend{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-3)}
+.heat-legend i{width:11px}
+.mini{display:grid;grid-template-columns:42px 90px auto;align-items:center;gap:8px}
+.mini-bar{height:6px;background:var(--sunk);border-radius:999px;overflow:hidden}
+.mini-bar i{display:block;height:100%;background:var(--accent);border-radius:999px;transform-origin:left;animation:grow 1s var(--ease) both}
+.mini small{color:var(--ink-3);font-size:11px}
+.area{width:100%;height:180px;display:block}
+.area .grid-l{stroke:var(--line);stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
+.area .line{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.4s var(--ease) .2s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.area-x{display:grid;grid-template-columns:repeat(8,1fr);margin-top:8px;font-size:10.5px;color:var(--ink-3);text-align:center}
+.area-x span{display:flex;flex-direction:column;gap:1px}
+.area-x span:last-child b{color:var(--accent)}
+.area-x b{font-size:12px;color:var(--ink);font-weight:500}
+.btn:not(:disabled):hover{transform:translateY(-1px)}
+.btn:not(:disabled):active{transform:translateY(0) scale(.97)}
+@media (max-width:600px){.heat-wrap{grid-template-columns:1fr}.heat-days{display:none}.heat{gap:2px}.heat i{border-radius:2px}.mini{grid-template-columns:38px 60px}.mini small{display:none}.area-x span:nth-child(odd){visibility:hidden}}
+.heat-wrap{max-width:620px}
+.heat-days{margin-top:0}
+.heat-card-row{display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center}
+.area .line{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+.area{clip-path:inset(0 100% 0 0);animation:reveal 1.3s var(--ease) .15s forwards}
+@keyframes reveal{to{clip-path:inset(0 0 0 0)}}
