@@ -566,7 +566,7 @@ const MODALS = {
     const v = vol(c.volId);
     modal('Certificate preview', 'Placeholder layout, to be matched to TFG\'s real template.', `<div class="cert"><span class="kicker">Certificate of volunteering</span><h1>${esc(v.name)}</h1><p class="muted" style="margin:0">has given</p><div class="big">${hrs(approvedMin(v.id))} hours</div>
       <p class="muted" style="max-width:40ch;margin:8px auto 0">of volunteer service to Thrift for Good, supporting children's charities across the UAE.</p><div class="row between small muted" style="margin-top:26px"><span>${fd(today(), { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>Thrift for Good</span></div></div>
-      <div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="issue-cert" data-id="${c.id}">${ic('mail')}Issue & email</button></div>`);
+      <div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn" data-action="print-cert">${ic('dl')}Print / Save PDF</button><button class="btn primary" data-action="issue-cert" data-id="${c.id}">${ic('mail')}Issue & email</button></div>`);
   },
 };
 
@@ -668,6 +668,7 @@ document.addEventListener('click', e => {
     case 'cal-book': UI.prefDate = t.dataset.d; UI.tab.volunteer = 'book'; render(); delete UI.prefDate; scrollTo(0, 0); break;
     case 'profile': profile(vol(id)); break;
     case 'big-qr': { const v = me(); $('#modal-root').innerHTML = `<div class="backdrop qr-bg" data-action="close-bg"><div class="qr-full" role="dialog" aria-modal="true"><span class="kicker">Thrift for Good · volunteer</span><h2>${esc(v.name)}</h2><div class="qr-big">${qr(v.code, 8)}</div><b class="mono">${v.code}</b><p class="small muted">Turn your screen brightness up and hold it under the scanner.</p><button class="btn dark" data-action="close" style="width:100%">Done</button></div></div>`; break; }
+    case 'print-cert': document.body.classList.add('printing-cert'); window.print(); setTimeout(() => document.body.classList.remove('printing-cert'), 500); break;
     case 'join-again': UI.joined = null; UI.chips = []; render(); break;
   }
 });

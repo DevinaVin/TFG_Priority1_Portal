@@ -643,3 +643,14 @@ button.swing{border:0;font:inherit;width:100%;cursor:zoom-in;display:block}
 .btn.btn-danger{background:var(--bad);border-color:var(--bad);color:#fff}
 .btn.btn-danger:hover{filter:brightness(.92)}
 .kbd-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent-glow);margin-right:7px;vertical-align:1px;animation:breathe 2s infinite}
+@media print{
+  @page{size:A4 landscape;margin:0}
+  body.printing-cert{background:#fff}
+  body.printing-cert>*:not(#modal-root){display:none!important}
+  body.printing-cert #modal-root .backdrop{position:static;background:none;backdrop-filter:none;padding:0;display:block}
+  body.printing-cert .modal{box-shadow:none;border:0;width:100%!important;max-height:none;padding:0;animation:none}
+  body.printing-cert .modal-head,body.printing-cert .modal>.row,body.printing-cert .modal:before{display:none!important}
+  body.printing-cert .cert{height:100vh;display:flex;flex-direction:column;justify-content:center;border-radius:0;padding:60px 90px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.printing-cert .cert h1{font-size:54px}
+  body.printing-cert .cert .big{font-size:64px}
+}
