@@ -604,3 +604,19 @@ button.cd:hover em{opacity:1}
 @media (max-width:600px){.badges{gap:8px}.medal{width:40px;height:40px}}
 @media (prefers-color-scheme:dark){.badge.got small{color:var(--accent-glow)}}
 @media (max-width:1180px){.grid[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}}
+
+/* ---------- profile drawer ---------- */
+.name-link{background:none;border:0;padding:0;font:inherit;font-weight:500;color:var(--ink);cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px;transition:text-decoration-color .2s}
+.name-link:hover{text-decoration-color:var(--accent)}
+#modal-root .backdrop.drawer-bg{place-items:stretch end;padding:0}
+.drawer{width:min(560px,100%);height:100dvh;overflow:auto;background:var(--bg);padding:24px;box-shadow:-30px 0 80px -30px rgba(0,0,0,.35);animation:drawer .45s var(--ease)}
+@keyframes drawer{from{transform:translateX(100%)}}
+.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.drawer-head .avatar{width:48px;height:48px;border-radius:16px;font-size:15px}
+.drawer-head h2{font-size:22px}
+.drawer-stats{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:12px}
+.ds-list{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.ds-list span{display:block;font-size:12px;color:var(--ink-3)}
+.ds-list b{font-weight:500;font-size:14px}
+.drawer .badges{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:600px){.drawer{padding:18px 16px}.drawer-stats{grid-template-columns:1fr}.drawer .ring{margin:0 auto}}

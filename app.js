@@ -169,7 +169,7 @@ function render() {
   const view = VIEWS[UI.role][UI.tab[UI.role]] || VIEWS[UI.role][NAV[UI.role][0][0]];
   $('#app').innerHTML = `<div class="view">${view()}</div>`;
   [...$('#app .view').children].forEach((el, i) => el.style.setProperty('--i', i));
-  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.ring .fill[data-off]').forEach(c => { c.style.strokeDashoffset = c.dataset.off; })));
+  setTimeout(() => document.querySelectorAll('.ring .fill[data-off]').forEach(c => { c.style.strokeDashoffset = c.dataset.off; }), 40);
   document.querySelectorAll('form[data-form=book],form[data-form=edit]').forEach(updatePicker);
   saveUI();
   renderScript();
@@ -452,7 +452,7 @@ VIEWS.manager.people = () => {
   return head('Roster', 'Volunteers', `${list.length} active · ${S.volunteers.filter(v => v.status === 'pending').length} waiting for induction`) +
   (quiet.length ? `<div class="notice">${ic('moon')}<div class="grow"><b>${quiet.map(x => esc(x.v.name)).join(', ')} ${quiet.length > 1 ? 'have' : 'has'} gone quiet</b><div class="small muted">No visit in over 30 days. A friendly check-in goes out automatically.</div></div><button class="btn sm" data-action="nudge" data-id="${quiet[0].v.id}">${ic('mail')}Preview check-in</button></div>` : '') +
   `<div class="card"><div class="table-wrap"><table class="t-people"><thead><tr><th>Name</th><th>Home store</th><th>Hours</th><th>Certificate</th><th>Last visit</th><th>Next shift</th></tr></thead><tbody>
-  ${list.map(({ v, m, last }) => { const n = upcoming(v.id)[0], ago = last ? daysBetween(last, today()) : null; return `<tr><td><div class="who-cell">${avatar(v)}<div><b style="font-weight:500">${esc(v.name)}</b><div class="small muted">${esc(v.email)}</div></div></div></td><td>${esc(v.store)}</td>
+  ${list.map(({ v, m, last }) => { const n = upcoming(v.id)[0], ago = last ? daysBetween(last, today()) : null; return `<tr><td><div class="who-cell">${avatar(v)}<div><button class="name-link" data-action="profile" data-id="${v.id}">${esc(v.name)}</button><div class="small muted">${esc(v.email)}</div></div></div></td><td>${esc(v.store)}</td>
     <td><div class="mini"><b class="mono">${hrs(m)}</b><span class="mini-bar"><i style="width:${Math.min(100, m / 60 / (m >= 3000 ? nextMilestone(m / 60) : 50) * 100)}%"></i></span><small class="mono">/${m >= 3000 ? nextMilestone(m / 60) : 50}</small></div></td><td>${v.wantsCert ? (S.certs.some(c => c.volId === v.id && c.status === 'issued') ? '<span class="st ok">Issued</span>' : m >= 3000 ? '<span class="st wait">Eligible</span>' : '<span class="st">Working towards</span>') : '<span class="small muted">Not needed</span>'}</td>
     <td>${last ? (ago > 30 ? `<span class="st bad">${ago} days ago</span>` : `<span class="small">${ago === 0 ? 'Today' : ago + ' days ago'}</span>`) : '–'}</td><td class="small">${n ? `${relDay(n.date)} · <span class="mono">${n.start}</span>` : '<span class="muted">–</span>'}</td></tr>`; }).join('')}</tbody></table></div></div>`;
 };
@@ -518,6 +518,21 @@ function emailHTML(v, kind) {
     ? [`Thank you for your first shift, ${f}`, `<p>Hi ${f},</p><p>Thank you for coming in for your first shift at Thrift for Good. We hope you enjoyed it, and that the team made you feel at home.</p><p>Your hours are already on your record. Book your next shift whenever suits you.</p><p>With thanks,<br>The Thrift for Good team</p>`]
     : [`${kind}. Thank you, ${f}`, `<p>Hi ${f},</p><p>You've just passed <b>${kind}</b> volunteering with Thrift for Good. That's ${kind} of sorting, styling and helping customers, and every one of them supports children's charities.</p><p>We notice the effort you put in and we're very grateful.</p><p>With thanks,<br>The Thrift for Good team</p>`];
   return `<div class="email"><header><span><b>To</b> ${esc(v.email)}</span><span><b>Subject</b> ${subject}</span></header><div>${body}</div></div>`;
+}
+function profile(v) {
+  const m = approvedMin(v.id), h = m / 60, n = upcoming(v.id)[0], last = lastVisit(v.id), ago = last ? daysBetween(last, today()) : null;
+  const target = h < 50 ? 50 : nextMilestone(h);
+  $('#modal-root').innerHTML = `<div class="backdrop drawer-bg" data-action="close-bg"><aside class="drawer" role="dialog" aria-modal="true" aria-label="${esc(v.name)}">
+    <div class="drawer-head"><div class="who-cell">${avatar(v)}<div><h2>${esc(v.name)}</h2><span class="small muted">${esc(v.email)} · ${esc(v.store)}</span></div></div><button class="btn icon" data-action="close" aria-label="Close">${ic('x')}</button></div>
+    <div class="drawer-stats"><div>${ring(h, target)}</div><div class="ds-list">
+      <div><span>Member since</span><b>${fd(v.joined, { month: 'short', year: 'numeric' })}</b></div>
+      <div><span>Last visit</span><b>${last ? (ago === 0 ? 'Today' : ago + ' days ago') : '–'}</b></div>
+      <div><span>Next shift</span><b>${n ? relDay(n.date) + ' · ' + n.start : 'None booked'}</b></div>
+      <div><span>Certificate</span><b>${v.wantsCert ? (S.certs.some(c => c.volId === v.id && c.status === 'issued') ? 'Issued' : 'Wants one') : 'Not needed'}</b></div>
+    </div></div>
+    <div class="row" style="margin:4px 0 6px"><button class="btn sm" data-action="nudge" data-id="${v.id}">${ic('mail')}Send check-in</button><button class="btn sm" data-action="export" data-vol="${v.id}">${ic('dl')}Export hours</button></div>
+    ${badges(v)}${heatmap(v)}</aside></div>`;
+  setTimeout(() => document.querySelectorAll('.drawer .ring .fill[data-off]').forEach(c => { c.style.strokeDashoffset = c.dataset.off; }), 40);
 }
 const MODALS = {
   edit(b) {
@@ -643,6 +658,7 @@ document.addEventListener('click', e => {
     case 'script-step': { const cur = SCRIPT.findIndex(([r, tb]) => UI.role === r && UI.tab[r] === tb); goScript(Math.max(0, Math.min(SCRIPT.length - 1, (cur < 0 ? -1 : cur) + +t.dataset.d))); break; }
     case 'cal-nav': UI.calOff = Math.max(-2, Math.min(2, (UI.calOff || 0) + +t.dataset.d)); render(); break;
     case 'cal-book': UI.prefDate = t.dataset.d; UI.tab.volunteer = 'book'; render(); delete UI.prefDate; scrollTo(0, 0); break;
+    case 'profile': profile(vol(id)); break;
     case 'join-again': UI.joined = null; UI.chips = []; render(); break;
   }
 });
