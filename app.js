@@ -392,7 +392,7 @@ function gantt(rows) {
     const bar = d ? `<div class="g-bar done" style="left:${pct(toMin(d.in))}%;width:${pct(toMin(d.out)) - pct(toMin(d.in))}%">${d.in}–${d.out}</div>`
       : o ? `<div class="g-bar live" style="left:${pct(toMin(o.in))}%;width:${Math.max(3, pct(Math.max(now, toMin(o.in) + 30)) - pct(toMin(o.in)))}%">in ${o.in}</div>` : '';
     const plan = b && !d && !o ? `<div class="g-bar" style="left:${pct(toMin(b.start))}%;width:${pct(toMin(b.end)) - pct(toMin(b.start))}%">${b.start}–${b.end}</div>` : '';
-    return `<div class="g-row"><div class="who-cell">${avatar(v)}<div style="min-width:0"><b>${esc(v.name)}</b><small>${esc((o || d || b).store)}${b ? '' : ' · walk-in'}</small></div></div>
+    return `<div class="g-row"><div class="who-cell">${avatar(v)}<div style="min-width:0"><b><button class="name-link" data-action="profile" data-id="${v.id}">${esc(v.name)}</button></b><small>${esc((o || d || b).store)}${b ? '' : ' · walk-in'}</small></div></div>
       <div class="g-track">${plan}${bar}${nowLine}</div>
       <div class="g-act">${o ? `<button class="btn sm dark" data-action="scan" data-code="${v.code}">Scan out</button>` : d ? `<span class="st ok">${hrs(d.minutes)}h logged</span>` : `<button class="btn sm" data-action="scan" data-code="${v.code}">Scan in</button>`}</div></div>`;
   }).join('') || empty('cal', 'No one booked or checked in today')}</div>`;
@@ -442,7 +442,7 @@ VIEWS.manager.hours = () => {
   `<div class="stats" style="margin-bottom:16px"><div><span>Approved hours</span><b>${hrs(total)}</b><span>${f === 'All' ? 'all stores' : f}</span></div><div><span>Visits</span><b>${rows.length}</b><span>logged</span></div>
     <div><span>Logged by QR</span><b>${Math.round(rows.filter(a => a.source === 'qr').length / Math.max(1, rows.length) * 100)}%</b><span>no staff typing</span></div><div><span>Waiting</span><b>${rows.filter(a => a.status === 'pending').length}</b><span>for approval</span></div></div>
   <div class="card"><div class="table-wrap"><table><thead><tr><th>Volunteer</th><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged</th><th>Status</th></tr></thead><tbody>
-  ${rows.slice(0, 60).map(a => { const v = vol(a.volId); return `<tr><td><div class="who-cell">${avatar(v)}${esc(v.name)}</div></td><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out}</td><td class="mono"><b>${hrs(a.minutes)}h</b></td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`; }).join('')}
+  ${rows.slice(0, 60).map(a => { const v = vol(a.volId); return `<tr><td><div class="who-cell">${avatar(v)}<button class="name-link" data-action="profile" data-id="${v.id}">${esc(v.name)}</button></div></td><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out}</td><td class="mono"><b>${hrs(a.minutes)}h</b></td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`; }).join('')}
   </tbody></table></div>${rows.length > 60 ? `<p class="hint" style="margin:12px 0 0">Showing the latest 60 of ${rows.length}. The export includes everything.</p>` : ''}</div>`;
 };
 
