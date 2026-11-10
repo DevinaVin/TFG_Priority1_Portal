@@ -125,7 +125,7 @@ const nextMilestone = h => MILESTONES.find(m => m > h) || Math.ceil((h + 1) / 10
 /* ---------- primitives ---------- */
 function toast(html, icon = 'check') {
   const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = ic(icon) + `<span>${html}</span>`;
-  $('#toasts').append(el); setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = 0; setTimeout(() => el.remove(), 300); }, 3800);
+  $('#toasts').append(el); const all = $('#toasts').children; while (all.length > 3) all[0].remove(); setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = 0; setTimeout(() => el.remove(), 300); }, 3800);
 }
 function modal(title, sub, body) {
   $('#modal-root').innerHTML = `<div class="backdrop" data-action="close-bg"><div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><div><h2>${title}</h2>${sub ? `<p class="muted small" style="margin:4px 0 0">${sub}</p>` : ''}</div><button class="btn icon" data-action="close" aria-label="Close">${ic('x')}</button></div>${body}</div></div>`;
@@ -383,8 +383,10 @@ VIEWS.manager.today = () => {
 VIEWS.manager.approvals = () => {
   const nv = S.volunteers.filter(v => v.status === 'pending'), hp = S.attendance.filter(a => a.status === 'pending' && a.out), cr = S.certs.filter(c => c.status === 'pending');
   const sect = (icon, title, sub, n, body, emptyTxt) => `<div class="card"><div class="card-head"><div><h3>${ic(icon)}${title}</h3><span class="small muted">${sub}</span></div><span class="tag" style="${n ? 'color:var(--bad);border-color:var(--bad)' : ''}">${n}</span></div><div class="list">${body || empty('check', emptyTxt)}</div></div>`;
+  const clear = !nv.length && !hp.length && !cr.length;
   return head('Needs a decision', 'Approvals', 'Everything waiting on staff, in one place.') +
-  `<div class="grid g2" style="align-items:start">
+  (clear ? `<div class="card all-clear"><div class="success-mark">${ic('check')}</div><div><h2>You're all caught up</h2><p class="muted" style="margin:4px 0 0">No applications, hours or certificates waiting. New ones will show up here with a count in the sidebar.</p></div></div>` : '') +
+  `<div class="grid g2" style="align-items:start${clear ? ';display:none' : ''}">
   ${sect('join', 'New volunteers', 'Approve once induction is done', nv.length, nv.map(v => `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${esc(v.store)} · applied ${relDay(v.joined).toLowerCase()} · ${esc(v.availability || 'flexible')}${v.wantsCert ? ' · wants certificate' : ''}</span></div>
      <div class="row"><button class="btn sm primary" data-action="approve-vol" data-id="${v.id}">${ic('check')}Approve</button><button class="btn sm danger" data-action="decline-vol" data-id="${v.id}">Decline</button></div></div>`).join(''), 'No new applications')}
   ${sect('clock', 'Hours to confirm', 'Manual entries from missed scans', hp.length, hp.map(a => { const v = vol(a.volId); return `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)} · <span class="mono">${hrs(a.minutes)}h</span></b><span class="small muted">${fd(a.date)} · ${esc(a.store)} · <span class="mono">${a.in}–${a.out}</span>${a.note ? `<br>"${esc(a.note)}"` : ''}</span></div>
@@ -522,6 +524,7 @@ document.addEventListener('click', e => {
   const a = t.dataset.action, id = t.dataset.id;
   if (a === 'close-bg') { if (e.target === t) closeModal(); return; }
   if (['me', 'filter'].includes(a)) return;
+  if (['approve-vol', 'approve-hrs', 'reject-hrs', 'issue-cert'].includes(a) && !t.dataset.go && t.closest('.view .item')) { const row = t.closest('.item'); row.classList.add(a.startsWith('reject') ? 'leaving bad' : 'leaving'); t.dataset.go = 1; setTimeout(() => t.click(), 320); return; }
   const ok = (msg, icon) => { save(); render(); if (msg) toast(msg, icon); };
   const f = t.closest('form');
   switch (a) {
