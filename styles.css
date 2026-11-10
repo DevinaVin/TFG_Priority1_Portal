@@ -544,3 +544,11 @@ tr:last-child td{border-bottom:0}
 @media print{#script{display:none}}
 td{white-space:nowrap}
 @media (max-width:600px){td{white-space:normal}}
+
+.field.invalid input,.field.invalid textarea{border-color:var(--bad);box-shadow:0 0 0 4px var(--bad-tint)}
+.field.invalid label{color:var(--bad)}
+.err:empty{min-height:0}
+.field .err{min-height:0;font-size:12.5px}
+form.shake{animation:shake .4s var(--ease)}
+@keyframes shake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.field.invalid input:focus,.field.invalid textarea:focus{border-color:var(--bad);box-shadow:0 0 0 4px var(--bad-tint)}

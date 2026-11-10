@@ -332,17 +332,17 @@ VIEWS.join.form = () => {
       <div class="row" style="justify-content:center;margin-top:22px"><button class="btn primary" data-action="goto" data-role="manager" data-tab="approvals">See it in the staff view ${ic('arrow')}</button><button class="btn" data-action="join-again">Register someone else</button></div>
       <p class="hint" style="margin-top:18px">Replaces the current Airtable form. Applications go straight into the staff approvals queue.</p></div></div>`;
   }
-  return `<div class="join">${journey}<form class="card" data-form="join" style="padding:28px"><span class="kicker">Volunteer application</span><h2 style="margin-bottom:20px">Tell us about you</h2>
-    <div class="fields"><div class="field"><label for="j-name">Full name</label><input id="j-name" name="name" required placeholder="Sara Al Hashimi"></div>
-    <div class="field"><label for="j-email">Email</label><input id="j-email" name="email" type="email" required placeholder="sara@example.com"></div>
-    <div class="field"><label for="j-phone">Mobile</label><input id="j-phone" name="phone" placeholder="+971 55 318 4402"></div>
+  return `<div class="join">${journey}<form class="card" data-form="join" style="padding:28px" novalidate><span class="kicker">Volunteer application</span><h2 style="margin-bottom:20px">Tell us about you</h2>
+    <div class="fields"><div class="field"><label for="j-name">Full name</label><input id="j-name" name="name" required placeholder="Sara Al Hashimi" autocomplete="name"><span class="err" data-err="name"></span></div>
+    <div class="field"><label for="j-email">Email</label><input id="j-email" name="email" type="email" required placeholder="sara@example.com" autocomplete="email"><span class="err" data-err="email"></span></div>
+    <div class="field"><label for="j-phone">Mobile</label><input id="j-phone" name="phone" type="tel" placeholder="+971 55 318 4402" autocomplete="tel"><span class="hint">Optional. For shift reminders by text later on.</span></div>
     <div class="field"><label for="j-store">Preferred store</label><select id="j-store" name="store">${STORES.map(s => `<option>${s}</option>`).join('')}</select></div></div>
     <div class="field"><label>When are you usually free?</label><div class="chips">${['Weekday mornings', 'Weekday afternoons', 'Weekday evenings', 'Weekends'].map(c => `<button type="button" class="chip ${UI.chips.includes(c) ? 'on' : ''}" data-action="chip" data-v="${c}">${c}</button>`).join('')}</div></div>
     <div class="field"><label>Would you like a volunteering certificate after 50 hours?</label>
       <div class="chips"><label class="chip"><input type="radio" name="cert" value="yes" style="display:none"> Yes, please</label><label class="chip"><input type="radio" name="cert" value="no" style="display:none"> No, I'm here for the fun</label></div>
       <span class="hint">This only changes which reminders you get. We track everyone's hours either way.</span><span class="err" id="cert-err"></span></div>
     <div class="field"><label for="j-notes">Anything we should know? <span class="hint">Optional</span></label><textarea id="j-notes" name="notes" rows="2" placeholder="Languages, skills, accessibility needs"></textarea></div>
-    <label class="check" style="margin-bottom:20px"><input type="checkbox" required><span>I agree to the volunteer code of conduct and to my hours being stored for my record.</span></label>
+    <label class="check" style="margin-bottom:6px"><input type="checkbox" name="consent"><span>I agree to the volunteer code of conduct and to my hours being stored for my record.</span></label><span class="err" data-err="consent" style="display:block;margin-bottom:14px"></span>
     <button class="btn primary" type="submit" style="width:100%;padding:12px">Submit application ${ic('arrow')}</button></form></div>`;
 };
 
@@ -594,6 +594,11 @@ document.addEventListener('change', e => {
   if (t.dataset.action === 'filter') { UI.filter = t.value; render(); }
   if (t.name === 'cert') { t.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.contains(t))); $('#cert-err').textContent = ''; }
 });
+document.addEventListener('input', e => {
+  const fld = e.target.closest('form[data-form=join] .field.invalid');
+  if (fld) { fld.classList.remove('invalid'); const er = fld.querySelector('[data-err]'); if (er) er.textContent = ''; }
+  if (e.target.name === 'consent') { const er = $('[data-err=consent]'); if (er) er.textContent = ''; }
+});
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 document.addEventListener('submit', e => {
@@ -627,7 +632,14 @@ document.addEventListener('submit', e => {
     toast(`<b>${esc(v.name)}</b> scanned out. ${hrs(m)} hrs logged automatically.`);
   }
   if (kind === 'join') {
-    if (!d.cert) { $('#cert-err').textContent = 'Please choose one'; return; }
+    const errs = {};
+    if (!d.name.trim() || d.name.trim().length < 2) errs.name = 'Please enter your full name';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) errs.email = d.email.trim() ? 'That email doesn\'t look quite right' : 'We need an email to send your induction details';
+    if (!d.cert) errs.cert = 'Please choose one';
+    if (!d.consent) errs.consent = 'Please agree to continue';
+    f.querySelectorAll('[data-err]').forEach(x => { x.textContent = errs[x.dataset.err] || ''; x.closest('.field')?.classList.toggle('invalid', !!errs[x.dataset.err]); });
+    $('#cert-err').textContent = errs.cert || '';
+    if (Object.keys(errs).length) { const firstBad = f.querySelector('.field.invalid input, .field.invalid textarea') || f.querySelector('[name=consent]'); if (errs.name || errs.email) firstBad.focus(); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); return; }
     const id = 'v' + uid();
     S.volunteers.push({ id, name: d.name.trim(), email: d.email, store: d.store, wantsCert: d.cert === 'yes', status: 'pending', joined: today(), code: 'TFG-' + id.slice(1, 5).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 8999), availability: UI.chips.join(', ') || 'Flexible', notes: d.notes });
     UI.joined = id; UI.chips = []; save(); render(); scrollTo(0, 0);
