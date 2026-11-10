@@ -552,3 +552,25 @@ td{white-space:nowrap}
 form.shake{animation:shake .4s var(--ease)}
 @keyframes shake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 .field.invalid input:focus,.field.invalid textarea:focus{border-color:var(--bad);box-shadow:0 0 0 4px var(--bad-tint)}
+
+/* ---------- month calendar ---------- */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-grid .cw{font:500 11px "Geist Mono",monospace;color:var(--ink-3);text-align:center;padding-bottom:4px}
+.cd{aspect-ratio:1;border-radius:12px;background:var(--sunk);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative;border:0;padding:0;font:inherit;color:inherit;min-width:0}
+.cd b{font:600 14px "Geist Mono",monospace;letter-spacing:-.03em}
+.cd small{font:500 9.5px "Geist Mono",monospace;opacity:.85}
+.cd.pad{background:none}
+.cd.past{color:var(--ink-3);background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.cd.today{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.cd.booked{background:var(--accent);color:#fff}
+.cd.done{background:var(--accent-tint);color:var(--accent-2)}
+button.cd{cursor:pointer;transition:transform .2s var(--ease),background .2s}
+button.cd em{position:absolute;top:4px;right:7px;font-style:normal;font-size:12px;color:var(--accent);opacity:0;transition:opacity .2s}
+button.cd:hover{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--accent);transform:translateY(-1px)}
+button.cd:hover em{opacity:1}
+@media (max-width:900px){.cal{order:-1}}
+@media (max-width:600px){.cal-grid{gap:4px}.cd{border-radius:9px}.cd b{font-size:12.5px}.cd small{display:none}}
+@media (prefers-color-scheme:dark){.cd.done{color:var(--accent-glow)}}
+@media (max-width:900px){.grid[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}}
+@media (max-width:1180px){.grid[style*="1.15fr"]{grid-template-columns:minmax(0,1fr)!important}.cal{max-width:560px}}
+.item b.mono{white-space:nowrap}

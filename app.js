@@ -247,7 +247,7 @@ VIEWS.volunteer.home = () => {
 
 /* --- visual shift picker --- */
 function picker(b = {}) {
-  const v = me(), date = b.date || addDays(today(), 1), store = b.store || v.store;
+  const v = me(), date = b.date || UI.prefDate || addDays(today(), 1), store = b.store || v.store;
   const s = b.start ? toMin(b.start) : 10 * 60, e = b.end ? toMin(b.end) : 12 * 60, n = (CLOSE - OPEN) / STEP;
   return `<input type="hidden" name="date" value="${date}"><input type="hidden" name="store" value="${store}"><input type="hidden" name="start" value="${toTime(s)}"><input type="hidden" name="end" value="${toTime(e)}">
   <div class="step"><i>01</i><b>Pick a day</b><span>next 3 weeks</span></div>
@@ -279,12 +279,29 @@ VIEWS.volunteer.book = () => head('Flexible hours', 'Book a shift', 'Come in for
     <label class="toggle-row check"><input type="checkbox" name="repeat"><span style="flex:1">Repeat this every week</span><span class="row small muted">for <select name="weeks"><option>4</option><option selected>8</option><option>12</option></select> weeks</span></label>
     <div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn primary" type="submit">${ic('check')}Confirm booking</button></div></form>`;
 
+function monthCal(v) {
+  const off = UI.calOff || 0, base = new Date(today() + 'T12:00'); base.setDate(1); base.setMonth(base.getMonth() + off);
+  const first = iso(base), lead = (base.getDay() + 6) % 7, days = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+  const t = today(), mine = S.bookings.filter(b => b.volId === v.id), att = S.attendance.filter(a => a.volId === v.id && a.out);
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += '<span class="cd pad"></span>';
+  for (let n = 1; n <= days; n++) {
+    const d = addDays(first, n - 1), b = mine.find(x => x.date === d && x.status === 'booked'), a = att.find(x => x.date === d);
+    const cls = ['cd', d === t ? 'today' : '', d < t ? 'past' : '', a ? 'done' : b ? 'booked' : ''].join(' ');
+    const label = a ? `${hrs(a.minutes)}h` : b ? b.start : '';
+    cells += d >= t && !b ? `<button class="${cls}" data-action="cal-book" data-d="${d}" title="Book ${fd(d)}"><b>${n}</b><em>+</em></button>`
+      : `<span class="${cls}" title="${fd(d)}${label ? ' · ' + label : ''}"><b>${n}</b>${label ? `<small>${label}</small>` : ''}</span>`;
+  }
+  return `<div class="card cal"><div class="card-head"><h3>${base.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</h3><div class="row"><button class="btn icon sm" data-action="cal-nav" data-d="-1" aria-label="Previous month" ${off <= -2 ? 'disabled' : ''}><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="btn icon sm" data-action="cal-nav" data-d="1" aria-label="Next month" ${off >= 2 ? 'disabled' : ''}><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div></div>
+    <div class="cal-grid">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(x => `<span class="cw">${x}</span>`).join('')}${cells}</div>
+    <div class="legend" style="margin-top:14px"><span><i style="background:var(--accent)"></i>Booked</span><span><i style="background:var(--accent-tint)"></i>Visited</span><span><i style="box-shadow:inset 0 0 0 1.5px var(--ink)"></i>Today</span><span>Tap a free day to book</span></div></div>`;
+}
 VIEWS.volunteer.shifts = () => {
   const v = me(), up = upcoming(v.id);
   const past = S.bookings.filter(b => b.volId === v.id && (b.date < today() || b.status === 'cancelled')).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
   return head('Your schedule', 'My shifts', 'Change times or cancel yourself. The store team sees it straight away.', `<button class="btn primary" data-action="tab" data-tab="book">${ic('plus')}Book a shift</button>`) +
-  `<div class="grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);align-items:start"><div class="card"><div class="card-head"><h3>Upcoming <span class="tag">${up.length}</span></h3></div><div class="list">${up.map(b => shiftItem(b)).join('') || empty('cal', 'No upcoming shifts. Book one any time.')}</div></div>
-  <div class="card"><div class="card-head"><h3>Changes</h3></div><div class="list">${past.map(b => `<div class="item"><div class="grow"><b>${fd(b.date)} · ${esc(b.store)}</b><span class="small muted mono">${b.start}–${b.end}</span></div>${b.status === 'cancelled' ? '<span class="st bad">Cancelled</span>' : '<span class="st">Past</span>'}</div>`).join('') || empty('repeat', 'Cancellations will show here')}</div></div></div>`;
+  `<div class="grid" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start">${monthCal(v)}<div style="display:flex;flex-direction:column;gap:16px;min-width:0"><div class="card"><div class="card-head"><h3>Upcoming <span class="tag">${up.length}</span></h3></div><div class="list">${up.map(b => shiftItem(b)).join('') || empty('cal', 'No upcoming shifts. Book one any time.')}</div></div>
+  <div class="card"><div class="card-head"><h3>Changes</h3></div><div class="list">${past.map(b => `<div class="item"><div class="grow"><b>${fd(b.date)} · ${esc(b.store)}</b><span class="small muted mono">${b.start}–${b.end}</span></div>${b.status === 'cancelled' ? '<span class="st bad">Cancelled</span>' : '<span class="st">Past</span>'}</div>`).join('') || empty('repeat', 'Cancellations will show here')}</div></div></div></div>`;
 };
 
 function heatmap(v) {
@@ -585,6 +602,8 @@ document.addEventListener('click', e => {
     case 'script-close': UI.script = false; renderScript(); saveUI(); break;
     case 'script-go': goScript(+t.dataset.i); break;
     case 'script-step': { const cur = SCRIPT.findIndex(([r, tb]) => UI.role === r && UI.tab[r] === tb); goScript(Math.max(0, Math.min(SCRIPT.length - 1, (cur < 0 ? -1 : cur) + +t.dataset.d))); break; }
+    case 'cal-nav': UI.calOff = Math.max(-2, Math.min(2, (UI.calOff || 0) + +t.dataset.d)); render(); break;
+    case 'cal-book': UI.prefDate = t.dataset.d; UI.tab.volunteer = 'book'; render(); delete UI.prefDate; scrollTo(0, 0); break;
     case 'join-again': UI.joined = null; UI.chips = []; render(); break;
   }
 });
