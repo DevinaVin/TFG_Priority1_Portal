@@ -642,3 +642,4 @@ button.swing{border:0;font:inherit;width:100%;cursor:zoom-in;display:block}
 .undo:hover{background:rgba(255,255,255,.18)}
 .btn.btn-danger{background:var(--bad);border-color:var(--bad);color:#fff}
 .btn.btn-danger:hover{filter:brightness(.92)}
+.kbd-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent-glow);margin-right:7px;vertical-align:1px;animation:breathe 2s infinite}

@@ -177,6 +177,7 @@ function render() {
   document.querySelectorAll('form[data-form=book],form[data-form=edit]').forEach(updatePicker);
   saveUI();
   renderScript();
+  const sc = document.querySelector('.scanner input[name=code]'); if (sc && matchMedia('(hover:hover)').matches) sc.focus({ preventScroll: true });
 }
 const VIEWS = { volunteer: {}, manager: {}, join: {} };
 const head = (kicker, title, sub, right = '') => `<div class="page-head"><div><span class="kicker">${kicker}</span><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div><div class="row">${right}</div></div>`;
@@ -412,7 +413,7 @@ VIEWS.manager.today = () => {
     <div class="scanner"><span class="label">Till scanner</span><h3 style="margin-top:4px;font-size:17px">Scan a volunteer's QR</h3>
       <div class="viewfinder" id="vf"><div class="ghost">${qr('TFG-DEMO', 4)}</div><div class="corners"><i></i><i></i><i></i><i></i></div><div class="beam"></div></div>
       <form data-form="scan"><input name="code" placeholder="or type a code" autocomplete="off" aria-label="Volunteer code"><button class="btn primary" type="submit">Scan</button></form>
-      <p class="hint small">For the demo, use Scan in / Scan out on the timeline.</p>
+      <p class="hint small"><span class="kbd-dot"></span>Ready for a USB scanner, which types the code and presses Enter. For the demo, use Scan in / Scan out on the timeline.</p>
       <div class="scan-log">${(S.scans || []).slice(0, 4).map(s => `<div><span><b>${esc(s.name)}</b> scanned ${s.dir}</span><span class="mono">${s.t}</span></div>`).join('') || '<div><span>No scans yet today</span></div>'}</div></div>
     <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
       <div class="stats"><div><span>Expected</span><b>${rows.filter(r => r.b).length}</b><span>booked today</span></div><div><span>On the floor</span><b>${rows.filter(r => r.o).length}</b><span>right now</span></div><div><span>Hours logged</span><b>${hrs(logged)}</b><span>today</span></div><div><span>Walk-ins</span><b>${rows.filter(r => !r.b).length}</b><span>no booking</span></div></div>
@@ -698,7 +699,7 @@ document.addEventListener('submit', e => {
     targets.forEach(x => { x.start = d.start; x.end = d.end; x.store = d.store; if (x === b) x.date = d.date; });
     closeModal(); save(); render(); toast(`Updated ${targets.length > 1 ? targets.length + ' shifts' : 'your shift'}. No staff action needed.`, 'cal');
   }
-  if (kind === 'scan') { if (d.code.trim()) scan(d.code); f.reset(); }
+  if (kind === 'scan') { if (d.code.trim()) scan(d.code); else toast('Type or scan a volunteer code first', 'warn'); f.reset(); }
   if (kind === 'manual') {
     const m = toMin(d.out) - toMin(d.in); if (m <= 0) { $('#merr').textContent = 'The leaving time needs to be after the arrival time'; return; }
     S.attendance.push({ id: uid(), volId: d.volId, store: d.store, date: d.date, in: d.in, out: d.out, minutes: m, source: 'manual', status: 'pending', note: d.note });
