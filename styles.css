@@ -1,158 +1,369 @@
 :root{
-  --bg:#f7f7f5; --surface:#fff; --sunk:#f1f1ee; --line:#e3e2de; --line-2:#d3d2cc;
-  --ink:#141414; --ink-2:#55554f; --ink-3:#8b8a83;
-  --accent:#1d4d3a; --accent-hover:#163d2e; --accent-tint:#eaf0ec;
-  --warn:#8a5a00; --warn-tint:#fbf3e0; --bad:#a23b22; --info:#2b4f7a;
+  --bg:#f3f1ec; --surface:#fffefb; --sunk:#ebe8e1; --line:#e2ded5; --line-2:#cfcac0;
+  --ink:#1d1c1a; --ink-2:#5c5952; --ink-3:#8f8b82;
+  --night:#1f2420; --night-2:#2b312c; --night-line:rgba(255,255,255,.09); --night-ink:#e9ece6; --night-ink-2:#9ba59d;
+  --accent:#0f6b4f; --accent-2:#0c5a42; --accent-tint:#e2efe8; --accent-glow:#58c49a;
+  --kraft:#e9dcc2; --kraft-ink:#5a4a2e;
+  --warn:#b07a12; --warn-tint:#f7eed9; --bad:#b0442a; --bad-tint:#f6e3dc;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 18px 40px -22px rgba(52,44,30,.18);
+  --r:20px;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-weight:600;margin:0;letter-spacing:-.015em}
-h1{font-size:22px} h2{font-size:18px} h3{font-size:14px}
-code,.mono,.stat b,td.num,.date-chip b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
-button,input,select,textarea{font:inherit;color:inherit}
-.link{background:none;border:0;color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:0 0 0 10px}
+body{background:var(--bg);color:var(--ink);font:14.5px/1.5 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.025em}
+h1{font-size:28px;line-height:1.15} h2{font-size:20px} h3{font-size:15px;letter-spacing:-.01em}
+.mono,code,.num{font-family:"Geist Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.link{background:none;border:0;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0 0 0 8px}
 
-.demo-banner{border-bottom:1px solid var(--line);background:var(--sunk);color:var(--ink-2);font-size:12px;text-align:center;padding:6px 16px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 32px;max-width:1200px;margin:0 auto;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px}
-.brand b{font-size:14px;display:block;line-height:1.2}
-.brand small{color:var(--ink-3);font-size:12px}
-.logo{width:30px;height:30px;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.04em}
-.role-switch{display:flex;border:1px solid var(--line-2);border-radius:7px;overflow:hidden;background:var(--surface)}
-.role-switch button{border:0;border-left:1px solid var(--line-2);background:none;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--ink-2)}
-.role-switch button:first-child{border-left:0}
-.role-switch button.on{background:var(--ink);color:#fff}
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:256px 1fr;min-height:100dvh}
+.rail{background:var(--night);color:var(--night-ink);padding:22px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100dvh}
+.brand{display:flex;align-items:center;gap:11px;padding:0 8px}
+.brand-mark{width:34px;height:34px;border-radius:10px;background:var(--kraft);color:var(--kraft-ink);display:grid;place-items:center;position:relative;font:600 11px "Geist Mono",monospace}
+.brand-mark:after{content:"";position:absolute;top:5px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--night)}
+.brand b{display:block;font-size:14.5px;letter-spacing:-.02em}
+.brand small{color:var(--night-ink-2);font-size:12px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--night-2);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--night-ink-2);padding:7px 4px;border-radius:9px;cursor:pointer;font-size:12.5px;font-weight:500;transition:background .25s var(--ease),color .25s}
+.seg button.on{background:var(--night-ink);color:var(--night)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-label{font-size:11px;color:var(--night-ink-2);padding:0 10px 6px;text-transform:uppercase;letter-spacing:.08em}
+.nav button{display:flex;align-items:center;gap:11px;border:0;background:none;color:var(--night-ink-2);padding:9px 10px;border-radius:10px;cursor:pointer;font-size:14px;text-align:left;transition:background .2s,color .2s}
+.nav button:hover{background:var(--night-2);color:var(--night-ink)}
+.nav button.on{background:var(--night-2);color:#fff;box-shadow:inset 0 0 0 1px var(--night-line)}
+.nav button.on svg{color:var(--accent-glow)}
+.nav .badge{margin-left:auto;font:500 11px "Geist Mono",monospace;background:var(--bad);color:#fff;border-radius:999px;padding:1px 7px}
+.rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.who{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--night-2);box-shadow:inset 0 0 0 1px var(--night-line)}
+.who select{background:none;border:0;color:var(--night-ink);padding:0;font-size:13.5px;font-weight:500;width:100%;cursor:pointer;outline:none}
+.who select option{color:var(--ink)}
+.who small{display:block;color:var(--night-ink-2);font-size:11.5px}
 
-.tabs{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;gap:22px;border-bottom:1px solid var(--line);overflow-x:auto}
-.tabs button{border:0;background:none;padding:10px 0;cursor:pointer;color:var(--ink-3);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;display:flex;gap:6px;align-items:center;font-size:13.5px}
-.tabs button:hover{color:var(--ink)}
-.tabs button.on{color:var(--ink);border-color:var(--ink);font-weight:500}
-.count{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--bad)}
+.stage{min-width:0}
+.proto-note{font-size:12px;color:var(--ink-3);padding:10px 40px;border-bottom:1px solid var(--line)}
+main{max-width:1180px;padding:34px 40px 80px}
 
-main{max-width:1200px;margin:0 auto;padding:28px 32px 60px}
-.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}
-.page-head p{margin:3px 0 0;color:var(--ink-2)}
+/* ---------- motion ---------- */
+.view>*{animation:rise .6s var(--ease) both;animation-delay:calc(var(--i,0) * 55ms)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(88,196,154,.55)}50%{box-shadow:0 0 0 6px rgba(88,196,154,0)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- page ---------- */
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+.page-head p{margin:6px 0 0;color:var(--ink-2);max-width:60ch}
+.kicker{font:500 12px "Geist Mono",monospace;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:block}
 .grid{display:grid;gap:16px}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .span2{grid-column:span 2}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
-.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
-.eyebrow{font-size:12px;color:var(--ink-3)}
-.muted{color:var(--ink-2)} .small{font-size:12.5px}
-.hero h2{font-size:20px;margin:4px 0 2px}
-
-.stat b{display:block;font-size:24px;font-weight:500;line-height:1.2;margin-top:4px;letter-spacing:-.02em}
-.stat span{font-size:12px;color:var(--ink-3)}
-
-.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);padding:7px 13px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap}
-.btn:hover{background:var(--sunk)}
-.btn.primary,.btn.coral{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.primary:hover,.btn.coral:hover{background:var(--accent-hover)}
-.btn.ghost-light{background:var(--surface)}
-.btn.sm{padding:4px 10px;font-size:12.5px}
-.btn.danger{color:var(--bad)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;box-shadow:var(--shadow);min-width:0}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.card-head h3{display:flex;align-items:center;gap:8px}
+.eyebrow{font-size:12.5px;color:var(--ink-3)}
+.muted{color:var(--ink-2)} .small{font-size:13px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .between{justify-content:space-between}
 
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);white-space:nowrap}
-.pill:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--line-2)}
-.pill.green:before{background:var(--accent)} .pill.coral:before{background:var(--bad)}
-.pill.amber:before{background:#c48a12} .pill.blue:before{background:var(--info)}
-.pill.coral{color:var(--bad)}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line-2);background:var(--surface);padding:8px 14px;border-radius:11px;cursor:pointer;font-size:13.5px;font-weight:500;white-space:nowrap;transition:transform .15s var(--ease),background .2s,border-color .2s,box-shadow .2s}
+.btn:hover{border-color:var(--ink-3)}
+.btn:active{transform:scale(.97)}
+.btn svg.i{width:16px;height:16px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 16px -8px rgba(15,107,79,.7)}
+.btn.primary:hover{background:var(--accent-2)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.on-night{background:rgba(255,255,255,.07);border-color:var(--night-line);color:var(--night-ink)}
+.btn.on-night:hover{background:rgba(255,255,255,.12)}
+.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:9px}
+.btn.danger{color:var(--bad)}
+.btn.icon{padding:7px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
-.progress{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
-.progress i{display:block;height:100%;background:var(--accent);transition:width .4s}
-.milestones{display:flex;justify-content:space-between;font-size:11.5px;margin-top:6px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
-.milestones .hit{color:var(--accent);font-weight:600}
+/* status */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);white-space:nowrap;padding:3px 9px 3px 8px;border-radius:999px;background:var(--sunk)}
+.st:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+.st.ok{background:var(--accent-tint);color:var(--accent-2)} .st.ok:before{background:var(--accent)}
+.st.wait{background:var(--warn-tint);color:#7d5507} .st.wait:before{background:var(--warn)}
+.st.bad{background:var(--bad-tint);color:var(--bad)} .st.bad:before{background:var(--bad)}
+.st.live{background:var(--accent-tint);color:var(--accent-2)} .st.live:before{background:var(--accent-glow);animation:breathe 2s infinite}
+.tag{font:500 11.5px "Geist Mono",monospace;color:var(--ink-3);border:1px solid var(--line-2);border-radius:6px;padding:1px 6px;white-space:nowrap}
 
+/* lists */
 .list{display:flex;flex-direction:column}
-.item{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
+.item{display:flex;align-items:center;gap:13px;padding:13px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0;padding-top:4px}
 .item .grow{flex:1;min-width:0}
 .item b{display:block;font-weight:500}
-.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:500;font-size:11px;flex:none;background:var(--sunk)!important;color:var(--ink-2)!important;border:1px solid var(--line)}
-.date-chip{width:44px;flex:none;text-align:center;border:1px solid var(--line);border-radius:6px;padding:4px 0;line-height:1.15}
-.date-chip small{display:block;font-size:10.5px;text-transform:uppercase;color:var(--ink-3)}
-.date-chip b{font-size:16px;font-weight:500}
-.today-tag{color:var(--accent);font-weight:600}
+.item.stack{flex-wrap:wrap}
+.item.stack>.row{flex-basis:100%;padding-left:49px}
+.avatar{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-weight:600;font-size:12.5px;flex:none;color:#fff}
+.date-chip{width:48px;flex:none;text-align:center;border-radius:12px;background:var(--sunk);padding:6px 0;line-height:1.1}
+.date-chip small{display:block;font:500 10.5px "Geist Mono",monospace;text-transform:uppercase;color:var(--ink-3)}
+.date-chip b{font:600 18px "Geist Mono",monospace;letter-spacing:-.04em}
+.date-chip.today{background:var(--accent);color:#fff} .date-chip.today small{color:#bfe6d4}
 
-.qr-box{border:1px solid var(--line);border-radius:6px;padding:12px;display:inline-block;line-height:0;background:#fff}
-.qr-box svg{width:132px;height:132px}
+/* ---------- volunteer home bento ---------- */
+.bento{display:grid;grid-template-columns:1.35fr 1fr .9fr;grid-auto-rows:minmax(0,auto);gap:16px}
+.ticket{grid-row:span 1;background:var(--night);color:var(--night-ink);border-radius:var(--r);display:grid;grid-template-columns:1fr 104px;overflow:hidden;position:relative;box-shadow:0 24px 50px -28px rgba(20,25,20,.6)}
+.ticket .main{padding:24px 26px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.ticket .stub{border-left:2px dashed rgba(255,255,255,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;background:var(--night-2)}
+.ticket .stub:before,.ticket .stub:after{content:"";position:absolute;left:-11px;width:20px;height:20px;border-radius:50%;background:var(--bg)}
+.ticket .stub:before{top:-10px} .ticket .stub:after{bottom:-10px}
+.ticket .stub b{font:600 40px "Geist Mono",monospace;letter-spacing:-.06em;line-height:1}
+.ticket .stub small{font:500 11px "Geist Mono",monospace;color:var(--night-ink-2);text-transform:uppercase;letter-spacing:.06em}
+.ticket .label{font:500 11.5px "Geist Mono",monospace;color:var(--night-ink-2);text-transform:uppercase;letter-spacing:.08em}
+.ticket h2{font-size:30px;letter-spacing:-.035em;margin-top:10px}
+.ticket .when{font:500 15px "Geist Mono",monospace;color:var(--night-ink);display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.ticket .when span{display:inline-flex;gap:6px;align-items:center;color:var(--night-ink-2);font-family:Geist,sans-serif;font-size:14px}
+.ticket .actions{margin-top:auto;padding-top:22px;display:flex;gap:8px;flex-wrap:wrap}
 
-form .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-label{font-size:12.5px;font-weight:500;color:var(--ink-2)}
-input,select,textarea{border:1px solid var(--line-2);background:#fff;border-radius:6px;padding:8px 10px;width:100%;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.ring-card{display:flex;align-items:center;gap:20px}
+.ring{position:relative;width:132px;height:132px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:10}
+.ring .track{stroke:var(--sunk)}
+.ring .fill{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset 1.2s var(--ease)}
+.ring .center{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1}
+.ring .center b{font:600 34px "Geist Mono",monospace;letter-spacing:-.06em;display:block}
+.ring .center small{font-size:11.5px;color:var(--ink-3)}
+.marks{display:flex;flex-direction:column;gap:7px;font-size:13px}
+.marks div{display:flex;align-items:center;gap:8px;color:var(--ink-3)}
+.marks div i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center}
+.marks div.hit{color:var(--ink)} .marks div.hit i{background:var(--accent);border-color:var(--accent)}
+.marks div.hit i:after{content:"";width:5px;height:3px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.marks div.next{color:var(--ink)} .marks div.next i{border-color:var(--accent);border-style:dashed}
+
+.swing{background:var(--kraft);color:var(--kraft-ink);border-radius:14px 14px 22px 22px;padding:30px 20px 18px;position:relative;transform:rotate(-1.5deg);transition:transform .5s var(--ease);box-shadow:0 22px 40px -24px rgba(90,74,46,.55);text-align:center;margin-top:6px}
+.swing:hover{transform:rotate(0deg) translateY(-2px)}
+.swing:before{content:"";position:absolute;top:12px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--bg);box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.swing:after{content:"";position:absolute;top:-26px;left:50%;width:1.5px;height:40px;background:#a8946b;transform:rotate(14deg);transform-origin:bottom}
+.swing .qr{background:#fffdf7;border-radius:10px;padding:10px;display:inline-block;line-height:0;margin:6px 0 10px}
+.swing .qr svg{width:124px;height:124px}
+.swing .qr svg rect[fill="#ffffff"]{fill:#fffdf7}
+.swing b{display:block;font:600 13px "Geist Mono",monospace;letter-spacing:.02em}
+.swing small{font-size:12px;opacity:.8}
+
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day{border-radius:14px;padding:10px 8px 12px;background:var(--sunk);display:flex;flex-direction:column;gap:6px;min-height:92px}
+.day .d{font:500 11px "Geist Mono",monospace;color:var(--ink-3);text-transform:uppercase}
+.day .n{font:600 18px "Geist Mono",monospace;letter-spacing:-.04em}
+.day.today{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.day .blk{font:500 10.5px "Geist Mono",monospace;background:var(--accent);color:#fff;border-radius:6px;padding:3px 5px;line-height:1.25}
+.day .blk.done{background:var(--accent-tint);color:var(--accent-2)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.stats>div{padding:18px 22px;border-left:1px solid var(--line)}
+.stats>div:first-child{border-left:0}
+.stats b{display:block;font:600 28px "Geist Mono",monospace;letter-spacing:-.05em;margin-top:4px;line-height:1.15}
+.stats span{font-size:12.5px;color:var(--ink-3)}
+
+/* ---------- booking picker ---------- */
+.dates{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.dates button{flex:none;width:58px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;transition:all .2s var(--ease)}
+.dates button small{font:500 10.5px "Geist Mono",monospace;color:var(--ink-3);text-transform:uppercase}
+.dates button b{font:600 18px "Geist Mono",monospace;letter-spacing:-.04em}
+.dates button i{width:4px;height:4px;border-radius:50%;background:transparent}
+.dates button i.has{background:var(--accent)}
+.dates button:hover{border-color:var(--ink-3)}
+.dates button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.dates button.on small{color:#b9b6ae}
+.stores{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stores button{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:11px 12px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:2px;transition:all .2s var(--ease)}
+.stores button b{font-weight:500;display:flex;align-items:center;gap:6px}
+.stores button small{color:var(--ink-3);font-size:12px}
+.stores button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-tint)}
+.slots{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:6px;user-select:none}
+.slot{height:46px;border-radius:7px;background:var(--sunk);border:0;cursor:pointer;position:relative;padding:0;transition:background .15s,transform .15s var(--ease)}
+.slot:hover{background:var(--line-2)}
+.slot.on{background:var(--accent)}
+.slot.edge-s{border-radius:10px 4px 4px 10px} .slot.edge-e{border-radius:4px 10px 10px 4px} .slot.edge-s.edge-e{border-radius:10px}
+.slot .busy{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);display:flex;gap:2px}
+.slot .busy i{width:3px;height:3px;border-radius:50%;background:var(--ink-3)}
+.slot.on .busy i{background:rgba(255,255,255,.6)}
+.slot-axis{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:6px}
+.slot-axis span{font:500 10.5px "Geist Mono",monospace;color:var(--ink-3)}
+.picker-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--night);color:var(--night-ink);border-radius:16px;padding:16px 18px;margin-top:18px}
+.picker-summary .t{font:600 22px "Geist Mono",monospace;letter-spacing:-.04em}
+.picker-summary small{color:var(--night-ink-2);display:block;font-size:12.5px}
+.step{display:flex;gap:10px;align-items:baseline;margin:22px 0 10px}
+.step:first-child{margin-top:0}
+.step i{font:600 11.5px "Geist Mono",monospace;color:var(--ink-3);font-style:normal}
+.step b{font-weight:600}
+.step span{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
+
+/* forms */
+form .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+label{font-size:13px;font-weight:500;color:var(--ink-2)}
+input,select,textarea{border:1px solid var(--line-2);background:#fff;border-radius:11px;padding:10px 12px;width:100%;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-tint)}
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{border:1px solid var(--line-2);background:#fff;border-radius:6px;padding:6px 11px;cursor:pointer;font-size:13px;color:var(--ink-2);font-weight:400}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;font-size:13.5px;color:var(--ink-2);font-weight:500;transition:all .2s var(--ease)}
 .chip:hover{border-color:var(--ink-3)}
-.chip.on{border-color:var(--ink);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.chip .small{color:var(--ink-3);font-family:"IBM Plex Mono",monospace;font-size:11.5px;margin-left:4px}
-.check{display:flex;gap:8px;align-items:flex-start;font-weight:400;color:var(--ink)}
-.check input{width:auto;margin-top:3px}
-.hint{font-size:12px;color:var(--ink-3)}
-.err{color:var(--bad);font-size:12.5px;min-height:18px}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400;color:var(--ink);cursor:pointer}
+.check input{width:16px;height:16px;margin-top:2px;accent-color:var(--accent)}
+.hint{font-size:12.5px;color:var(--ink-3)}
+.err{color:var(--bad);font-size:13px;min-height:18px}
+.toggle-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;margin-top:16px;flex-wrap:wrap}
+.toggle-row select{width:auto;padding:5px 8px}
 
-.slot-preview{border:1px solid var(--line);background:var(--sunk);border-radius:6px;padding:12px 14px}
-.timeline{position:relative;height:22px;border-top:1px solid var(--line-2);margin-top:22px}
-.timeline i{position:absolute;top:-5px;height:9px;background:var(--accent);border-radius:2px}
-.timeline span{position:absolute;top:8px;font-size:10.5px;color:var(--ink-3);transform:translateX(-50%);font-family:"IBM Plex Mono",monospace}
-
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;font-size:12px;color:var(--ink-3);font-weight:400;padding:8px 10px;border-bottom:1px solid var(--line-2)}
-td{padding:9px 10px;border-bottom:1px solid var(--line)}
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font:500 11.5px "Geist Mono",monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:11px 12px;border-bottom:1px solid var(--line)}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:#faf8f3}
 tr:last-child td{border-bottom:0}
-.table-wrap{overflow-x:auto}
+.table-wrap{overflow-x:auto;margin:-6px -8px}
+.who-cell{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.who-cell .avatar{width:28px;height:28px;border-radius:9px;font-size:11px}
 
-.bars{display:flex;flex-direction:column;gap:10px}
-.bar-row{display:grid;grid-template-columns:100px 1fr 56px;gap:12px;align-items:center;font-size:13px}
-.bar-row b{font-family:"IBM Plex Mono",monospace;font-weight:400;text-align:right}
-.bar-track{height:8px;background:var(--sunk);border-radius:2px;overflow:hidden}
-.bar-track i{display:block;height:100%;background:var(--accent)}
-.cols{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:8px;border-bottom:1px solid var(--line-2)}
-.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
-.col i{width:100%;max-width:32px;background:#c9d6cf}
+/* ---------- manager today ---------- */
+.today-grid{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+.scanner{background:var(--night);color:var(--night-ink);border-radius:var(--r);padding:22px;position:sticky;top:20px;box-shadow:0 24px 50px -28px rgba(20,25,20,.6)}
+.scanner .label{font:500 11.5px "Geist Mono",monospace;color:var(--night-ink-2);text-transform:uppercase;letter-spacing:.08em}
+.viewfinder{aspect-ratio:1;border-radius:16px;background:radial-gradient(circle at 50% 40%,#2f3832,#1a1f1b);margin:16px 0;position:relative;overflow:hidden;display:grid;place-items:center}
+.viewfinder .corners{position:absolute;inset:18%;}
+.viewfinder .corners i{position:absolute;width:26px;height:26px;border-color:var(--accent-glow);border-style:solid;border-width:0}
+.viewfinder .corners i:nth-child(1){top:0;left:0;border-top-width:3px;border-left-width:3px;border-top-left-radius:10px}
+.viewfinder .corners i:nth-child(2){top:0;right:0;border-top-width:3px;border-right-width:3px;border-top-right-radius:10px}
+.viewfinder .corners i:nth-child(3){bottom:0;left:0;border-bottom-width:3px;border-left-width:3px;border-bottom-left-radius:10px}
+.viewfinder .corners i:nth-child(4){bottom:0;right:0;border-bottom-width:3px;border-right-width:3px;border-bottom-right-radius:10px}
+.viewfinder .beam{position:absolute;left:18%;right:18%;height:2px;background:linear-gradient(90deg,transparent,var(--accent-glow),transparent);animation:beam 2.4s var(--ease) infinite alternate}
+@keyframes beam{from{top:20%}to{top:80%}}
+.viewfinder .ghost{opacity:.12;line-height:0}
+.viewfinder .ghost svg{width:120px;height:120px}
+.viewfinder .ghost rect[fill="#000000"]{fill:#fff}
+.viewfinder .ghost rect[fill="#ffffff"]{fill:transparent}
+.viewfinder.flash{animation:flash .6s var(--ease)}
+@keyframes flash{30%{box-shadow:inset 0 0 0 4px var(--accent-glow);background:#2c4a3c}}
+.scanner form{display:flex;gap:8px}
+.scanner input{background:rgba(255,255,255,.06);border-color:var(--night-line);color:#fff;font-family:"Geist Mono",monospace;font-size:13px}
+.scanner input::placeholder{color:#7f8a82}
+.scanner input:focus{border-color:var(--accent-glow);box-shadow:0 0 0 4px rgba(88,196,154,.15)}
+.scanner .hint{color:var(--night-ink-2);margin-top:12px}
+.scan-log{margin-top:16px;border-top:1px solid var(--night-line);padding-top:12px;display:flex;flex-direction:column;gap:8px;font-size:12.5px}
+.scan-log div{display:flex;justify-content:space-between;color:var(--night-ink-2)}
+.scan-log div b{color:var(--night-ink);font-weight:500}
+
+.gantt{position:relative}
+.g-axis,.g-row{display:grid;grid-template-columns:190px 1fr 108px;align-items:center;gap:14px}
+.g-axis{font:500 10.5px "Geist Mono",monospace;color:var(--ink-3);padding-bottom:8px;border-bottom:1px solid var(--line)}
+.g-axis .ticks{position:relative;height:14px}
+.g-axis .ticks span{position:absolute;transform:translateX(-50%)}
+.g-row{padding:12px 0;border-bottom:1px solid var(--line)}
+.g-row:last-child{border-bottom:0}
+.g-row .who-cell b{font-weight:500;display:block;line-height:1.2}
+.g-row .who-cell small{color:var(--ink-3);font-size:12px}
+.g-track{position:relative;height:30px;background:repeating-linear-gradient(90deg,var(--sunk) 0 1px,transparent 1px calc(100%/12));border-radius:8px}
+.g-bar{position:absolute;top:4px;bottom:4px;border-radius:7px;border:1.5px dashed var(--line-2);background:rgba(255,255,255,.6);font:500 10.5px "Geist Mono",monospace;color:var(--ink-3);display:flex;align-items:center;padding:0 7px;white-space:nowrap;overflow:hidden}
+.g-bar.live{border:0;background:var(--accent);color:#fff}
+.g-bar.done{border:0;background:var(--accent-tint);color:var(--accent-2)}
+.g-now{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--bad);border-radius:2px;z-index:1}
+.g-now:before{content:"";position:absolute;top:-3px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.g-act{text-align:right}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--ink-3);flex-wrap:wrap}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{width:14px;height:8px;border-radius:3px;display:inline-block}
+
+/* charts */
+.bars{display:flex;flex-direction:column;gap:14px}
+.bar-row{display:grid;grid-template-columns:96px 1fr 60px;gap:14px;align-items:center;font-size:13.5px}
+.bar-row b{font:500 13px "Geist Mono",monospace;text-align:right}
+.bar-track{height:10px;background:var(--sunk);border-radius:999px;overflow:hidden}
+.bar-track i{display:block;height:100%;background:var(--accent);border-radius:999px;transform-origin:left;animation:grow 1s var(--ease) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.cols{display:flex;align-items:flex-end;gap:10px;height:170px;padding-top:10px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.col i{width:100%;max-width:40px;background:var(--sunk);border-radius:8px;transform-origin:bottom;animation:growY .9s var(--ease) both}
 .col i.cur{background:var(--accent)}
-.col small{font-size:10.5px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
-.col em{font-style:normal;font-size:11px;color:var(--ink-2);font-family:"IBM Plex Mono",monospace}
-.cols-labels{display:flex;gap:8px;margin-top:6px}
+@keyframes growY{from{transform:scaleY(0)}}
+.col small{font:500 10.5px "Geist Mono",monospace;color:var(--ink-3)}
+.col em{font:500 11px "Geist Mono",monospace;font-style:normal;color:var(--ink-2)}
 
-.scanner{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 20px}
-.viewfinder{aspect-ratio:1.7;border-radius:6px;background:var(--sunk);display:grid;place-items:center;margin:12px 0;position:relative}
-.viewfinder:before{content:"";width:46%;aspect-ratio:1;border:1.5px solid var(--ink-3);border-radius:4px}
-.viewfinder span{position:absolute;bottom:8px}
+/* email */
+.email{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+.email header{padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2);background:#faf8f3;display:grid;gap:2px}
+.email header b{color:var(--ink);font-weight:500}
+.email div{padding:18px;font-size:14px}
+.email p{margin:0 0 12px}
 
-.email{border:1px solid var(--line);border-radius:6px;background:#fff}
-.email header{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-2);background:var(--sunk)}
-.email div{padding:14px;font-size:13.5px}
-.email p{margin:0 0 10px}
+.notice{display:flex;align-items:center;gap:14px;border:1px solid #ead9b0;background:var(--warn-tint);border-radius:16px;padding:14px 18px;margin-bottom:16px;flex-wrap:wrap}
+.notice .grow{flex:1;min-width:200px}
+.empty{padding:28px 16px;text-align:center;color:var(--ink-3);font-size:13.5px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.empty svg.i{width:22px;height:22px;color:var(--line-2)}
 
-.notice{border:1px solid #ead9b0;background:var(--warn-tint);border-radius:8px;padding:12px 16px;margin-bottom:16px}
-.empty{padding:22px;text-align:center;color:var(--ink-3);font-size:13px}
-.success-mark{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center;margin:0 auto 12px;font-size:18px}
-.steps{counter-reset:s}
-.steps .item:before{counter-increment:s;content:counter(s);font-family:"IBM Plex Mono",monospace;color:var(--ink-3);width:16px;flex:none;align-self:flex-start}
+/* join */
+.join{display:grid;grid-template-columns:.9fr 1.3fr;gap:16px;align-items:start}
+.journey{background:var(--night);color:var(--night-ink);border-radius:var(--r);padding:28px;position:sticky;top:20px}
+.journey h2{font-size:26px;letter-spacing:-.035em;margin:6px 0 8px}
+.journey p{color:var(--night-ink-2);margin:0 0 22px}
+.journey ol{list-style:none;margin:0;padding:0;position:relative}
+.journey ol:before{content:"";position:absolute;left:13px;top:10px;bottom:10px;width:1.5px;background:var(--night-line)}
+.journey li{display:flex;gap:14px;padding:10px 0;position:relative}
+.journey li i{width:28px;height:28px;border-radius:50%;background:var(--night-2);box-shadow:inset 0 0 0 1px var(--night-line);display:grid;place-items:center;font:600 11.5px "Geist Mono",monospace;font-style:normal;flex:none;color:var(--night-ink-2)}
+.journey li:first-child i{background:var(--accent-glow);color:var(--night);box-shadow:none}
+.journey li b{display:block;font-weight:500}
+.journey li small{color:var(--night-ink-2);font-size:13px}
+.success{text-align:center;padding:40px 28px}
+.success-mark{width:56px;height:56px;border-radius:18px;background:var(--accent);color:#fff;display:grid;place-items:center;margin:0 auto 18px}
+.success-mark svg.i{width:26px;height:26px;stroke-width:2.2}
 
-#modal-root .backdrop{position:fixed;inset:0;background:rgba(20,20,20,.35);display:grid;place-items:center;padding:16px;z-index:50}
-.modal{background:var(--surface);border-radius:10px;padding:22px;width:min(520px,100%);max-height:90vh;overflow:auto;border:1px solid var(--line);box-shadow:0 12px 40px rgba(0,0,0,.18)}
-#toasts{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:60}
-.toast{background:var(--ink);color:#fff;padding:10px 14px;border-radius:6px;font-size:13px;max-width:340px}
-.toast b{font-weight:600}
+/* modal / toast */
+#modal-root .backdrop{position:fixed;inset:0;background:rgba(24,22,18,.4);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px;z-index:50;animation:fade .25s var(--ease)}
+.modal{background:var(--surface);border-radius:24px;padding:26px;width:min(560px,100%);max-height:92vh;overflow:auto;box-shadow:0 30px 80px -20px rgba(0,0,0,.35);animation:pop .35s var(--ease)}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+@keyframes fade{from{opacity:0}} @keyframes pop{from{transform:translateY(14px) scale(.97);opacity:0}}
+#toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:60;pointer-events:none}
+.toast{background:var(--night);color:var(--night-ink);padding:11px 16px 11px 12px;border-radius:14px;font-size:13.5px;max-width:420px;display:flex;gap:10px;align-items:center;box-shadow:0 16px 40px -12px rgba(0,0,0,.4);animation:toast .45s var(--ease)}
+.toast svg.i{color:var(--accent-glow)}
+.toast b{font-weight:600;color:#fff}
+@keyframes toast{from{opacity:0;transform:translateY(12px) scale(.96)}}
+.cert{border-radius:16px;padding:34px 30px;text-align:center;background:#fffcf4;box-shadow:inset 0 0 0 1px var(--line),inset 0 0 0 8px #fffcf4,inset 0 0 0 9px var(--kraft)}
+.cert h1{font-size:30px;margin:14px 0 6px}
+.cert .big{font:600 36px "Geist Mono",monospace;letter-spacing:-.05em;color:var(--accent)}
 
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .bento{grid-template-columns:1fr 1fr} .ticket{grid-column:span 2}
+  .today-grid{grid-template-columns:1fr} .scanner{position:static}
+  .join{grid-template-columns:1fr} .journey{position:static}
+}
 @media (max-width:900px){
-  .g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .g2{grid-template-columns:1fr} .span2{grid-column:auto}
+  .shell{grid-template-columns:1fr}
+  .rail{position:sticky;top:0;height:auto;z-index:20;padding:12px 16px;gap:10px;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .rail .brand{padding:0} .rail .brand small{display:none}
+  .rail .seg{margin-left:auto;width:auto} .seg button{padding:6px 10px}
+  .nav{flex-direction:row;overflow-x:auto;width:100%;order:3;gap:4px} .nav-label{display:none}
+  .nav button{white-space:nowrap;padding:7px 10px;font-size:13px}
+  .rail-foot{display:none}
+  main{padding:24px 16px 60px} .proto-note{padding:8px 16px}
+  .g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))} .g2{grid-template-columns:1fr} .span2{grid-column:auto}
+  .stats{grid-template-columns:repeat(2,1fr)} .stats>div:nth-child(3){border-left:0} .stats>div:nth-child(n+3){border-top:1px solid var(--line)}
+  .g-axis,.g-row{grid-template-columns:130px 1fr 92px;gap:10px}
+  .stores{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:600px){
-  main{padding:18px 16px 40px} .topbar{padding:12px 16px} .tabs{padding:0 16px}
+  h1{font-size:24px}
+  .bento{grid-template-columns:1fr} .ticket{grid-column:auto;grid-template-columns:1fr 84px} .ticket h2{font-size:24px}
   .g3,.g4,.fields{grid-template-columns:1fr}
-  .role-switch{width:100%} .role-switch button{flex:1;padding:7px 4px}
-  .bar-row{grid-template-columns:80px 1fr 48px}
+  .week{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px} .day{padding:8px 4px;min-height:80px} .day .blk{font-size:9.5px;padding:2px 3px}
+  .slots{grid-template-columns:repeat(12,1fr)} .slot-axis{grid-template-columns:repeat(12,1fr)}
+  .g-axis{display:none} .g-row{grid-template-columns:1fr auto} .g-track{grid-column:1/-1;grid-row:2}
+  .ring-card{flex-direction:column;align-items:flex-start}
+  .seg{width:100%;margin-left:0}
 }
-.item.stack{flex-wrap:wrap}
-.item.stack>.row{flex-basis:100%;padding-left:42px}
+.swing small,.swing b{display:block}
+.swing .qr{display:block;width:max-content;margin:8px auto 10px}
+.marks div{white-space:nowrap}
+.marks .small{color:var(--ink-3)}
+.ticket .stub b.time{font-size:24px}
+.dates{scrollbar-width:none;mask-image:linear-gradient(90deg,#000 92%,transparent)}
+.dates::-webkit-scrollbar{display:none}
