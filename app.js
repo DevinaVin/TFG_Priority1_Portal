@@ -227,8 +227,9 @@ VIEWS.volunteer.home = () => {
     <div class="card ring-card">${ring(h, target)}<div><div class="eyebrow" style="margin-bottom:10px"><span class="mono">${hrs(target * 60 - m)}</span> hrs to your next milestone</div><div class="marks">${marks}</div></div></div>
     <div class="swing"><small>Show at the till</small><div class="qr">${qr(v.code)}</div><b>${v.code}</b><small>Scan when you arrive and leave</small></div>
   </div>
+  ${fresh ? firstSteps(v) : ''}
   <div class="card" style="margin-top:16px"><div class="card-head"><h3>Your next 7 days</h3><button class="btn sm" data-action="tab" data-tab="book">${ic('plus')}Add a shift</button></div>${weekStrip(v)}</div>
-  ${fresh ? firstSteps(v) : `<div class="stats" style="margin-top:16px">
+  ${fresh ? '' : `<div class="stats" style="margin-top:16px">
     <div><span>Approved hours</span><b>${hrs(m)}</b><span>${pendingMin(v.id) ? hrs(pendingMin(v.id)) + ' hrs waiting' : 'all confirmed'}</span></div>
     <div><span>Shifts done</span><b>${S.attendance.filter(a => a.volId === v.id && a.out).length}</b><span>since ${fd(v.joined, { month: 'short', year: 'numeric' })}</span></div>
     <div><span>Booked ahead</span><b>${upcoming(v.id).length}</b><span>shifts</span></div>
