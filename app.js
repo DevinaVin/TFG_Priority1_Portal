@@ -587,7 +587,7 @@ function renderScript() {
   const cur = SCRIPT.findIndex(([r, t]) => UI.role === r && UI.tab[r] === t);
   el.innerHTML = `<div class="script-panel"><div class="script-head"><div><span class="kicker" style="margin:0">Presenter</span><b>Demo script</b></div><button class="btn icon sm" data-action="script-close" aria-label="Hide demo script">${ic('x')}</button></div>
     <ol>${SCRIPT.map(([r, t, title, note], i) => `<li class="${i === cur ? 'on' : ''}"><button data-action="script-go" data-i="${i}"><i>${i + 1}</i><span><b>${title}</b><small>${note}</small></span></button></li>`).join('')}</ol>
-    <div class="script-foot"><button class="btn sm" data-action="script-step" data-d="-1" ${cur <= 0 ? 'disabled' : ''}>Back</button><span class="mono small muted">${cur < 0 ? '–' : cur + 1} / ${SCRIPT.length}</span><button class="btn sm primary" data-action="script-step" data-d="1" ${cur >= SCRIPT.length - 1 ? 'disabled' : ''}>Next ${ic('arrow')}</button></div></div>`;
+    <div class="script-foot"><button class="btn sm" data-action="script-step" data-d="-1" ${cur <= 0 ? 'disabled' : ''}>Back</button><span class="mono small muted">${cur < 0 ? '–' : cur + 1} / ${SCRIPT.length}<kbd>←</kbd><kbd>→</kbd></span><button class="btn sm primary" data-action="script-step" data-d="1" ${cur >= SCRIPT.length - 1 ? 'disabled' : ''}>Next ${ic('arrow')}</button></div></div>`;
   const on = el.querySelector('li.on'); if (on) on.scrollIntoView({ block: 'nearest' });
 }
 function goScript(i) { const [r, t] = SCRIPT[i]; UI.role = r; UI.tab[r] = t; closeModal(); render(); scrollTo(0, 0); }
@@ -683,7 +683,11 @@ document.addEventListener('input', e => {
   if (fld) { fld.classList.remove('invalid'); const er = fld.querySelector('[data-err]'); if (er) er.textContent = ''; }
   if (e.target.name === 'consent') { const er = $('[data-err=consent]'); if (er) er.textContent = ''; }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (!UI.script || $('#modal-root').innerHTML || (/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '') && !(document.activeElement.name === 'code' && !document.activeElement.value))) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const cur = SCRIPT.findIndex(([r, tb]) => UI.role === r && UI.tab[r] === tb); goScript(Math.max(0, Math.min(SCRIPT.length - 1, (cur < 0 ? -1 : cur) + (e.key === 'ArrowRight' ? 1 : -1)))); }
+});
 
 document.addEventListener('submit', e => {
   const f = e.target, kind = f.dataset.form; if (!kind) return; e.preventDefault();

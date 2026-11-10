@@ -654,3 +654,4 @@ button.swing{border:0;font:inherit;width:100%;cursor:zoom-in;display:block}
   body.printing-cert .cert h1{font-size:54px}
   body.printing-cert .cert .big{font-size:64px}
 }
+kbd{font:500 10.5px "Geist Mono",monospace;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:0 5px;margin-left:5px;color:var(--ink-3);background:var(--surface)}
