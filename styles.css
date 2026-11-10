@@ -446,3 +446,28 @@ tr:last-child td{border-bottom:0}
   .nav{order:3}
   .nav button{padding:6px 10px}
 }
+.slot em{display:none}
+@media (max-width:600px){
+  .slot-axis{display:none}
+  .slots{row-gap:6px}
+  .slot{height:44px}
+  .slot em{display:block;position:absolute;top:5px;left:6px;font:500 10px "Geist Mono",monospace;font-style:normal;color:var(--ink-3)}
+  .slot.on em{color:rgba(255,255,255,.75)}
+}
+@media (max-width:600px){
+  .viewfinder{aspect-ratio:2.2;margin:12px 0}
+  .viewfinder .ghost svg{width:70px;height:70px}
+  .viewfinder .corners{inset:14% 32%}
+  .scan-log{display:none}
+  .table-wrap{margin:0;overflow:visible}
+  table thead{display:none}
+  table,tbody{display:block}
+  tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px 0;border-bottom:1px solid var(--line)}
+  tbody tr:last-child{border-bottom:0}
+  tbody tr:hover{background:none}
+  td{border:0;padding:0;font-size:13px}
+  td:first-child{flex-basis:100%;font-weight:500}
+  td.mono{color:var(--ink-2)}
+}
+@media (max-width:600px){.step span{display:none}form[data-form=book] [type=submit]{width:100%;padding:12px}form[data-form=book] .row:has([type=submit]){display:block}}
+@media (max-width:600px){.t-people td:nth-child(5):before{content:"Last visit ";color:var(--ink-3)}.t-people td:nth-child(6){flex-basis:100%}.t-people td:nth-child(6):before{content:"Next shift ";color:var(--ink-3)}}
