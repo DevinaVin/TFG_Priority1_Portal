@@ -451,6 +451,24 @@ function area(weeks) {
     <path d="${d}" class="line" pathLength="1"/>
   </svg><div class="area-x">${weeks.map(([s, m]) => `<span><b class="mono">${hrs(m)}</b>${fd(s, { day: 'numeric', month: 'short' })}</span>`).join('')}</div>`;
 }
+function funnel() {
+  const all = S.volunteers, hrsOf = v => approvedMin(v.id) / 60;
+  const stages = [
+    ['Applied', all.length],
+    ['Approved', all.filter(v => v.status === 'active').length],
+    ['First shift', all.filter(v => S.attendance.some(a => a.volId === v.id && a.out)).length],
+    ['10 hours', all.filter(v => hrsOf(v) >= 10).length],
+    ['25 hours', all.filter(v => hrsOf(v) >= 25).length],
+    ['50 hours', all.filter(v => hrsOf(v) >= 50).length],
+    ['100 hours', all.filter(v => hrsOf(v) >= 100).length],
+  ];
+  const max = stages[0][1] || 1;
+  let worst = -1, worstDrop = 0;
+  stages.forEach(([, n], i) => { if (i && stages[i - 1][1]) { const drop = 1 - n / stages[i - 1][1]; if (drop > worstDrop && i > 1) { worstDrop = drop; worst = i; } } });
+  return `<div class="card" style="margin-top:16px"><div class="card-head"><div><h3>${ic('users')}Volunteer journey</h3><span class="small muted">How many volunteers reached each stage. Shows where people stop coming.</span></div><span class="tag">Priority 2</span></div>
+    <div class="funnel">${stages.map(([l, n], i) => `<div class="f-row ${i === worst ? 'worst' : ''}"><span class="f-l">${l}</span><div class="f-track"><i style="width:${Math.max(2, n / max * 100)}%;animation-delay:${i * 70}ms"></i></div><b class="mono">${n}</b><span class="f-pct mono">${i ? (stages[i - 1][1] ? Math.round(n / stages[i - 1][1] * 100) + '%' : '–') : ''}</span></div>`).join('')}</div>
+    ${worst > 0 ? `<p class="small muted" style="margin:14px 0 0">Biggest drop: <b style="color:var(--ink)">${stages[worst - 1][0]} → ${stages[worst][0]}</b> (${Math.round(worstDrop * 100)}% don't make it). That's where a check-in email does the most good.</p>` : ''}</div>`;
+}
 VIEWS.manager.insights = () => {
   const appr = S.attendance.filter(a => a.status === 'approved' && a.out), since = addDays(today(), -28);
   const byStore = STORES.map(s => [s, appr.filter(a => a.store === s && a.date >= since).reduce((t, a) => t + a.minutes, 0)]).sort((a, b) => b[1] - a[1]);
@@ -464,6 +482,7 @@ VIEWS.manager.insights = () => {
     ${byStore.map(([s, m], i) => `<div class="bar-row"><span>${s}</span><div class="bar-track"><i style="width:${m / mx * 100}%;animation-delay:${i * 80}ms"></i></div><b>${hrs(m)}h</b></div>`).join('')}</div></div>
   <div class="card"><div class="card-head"><h3>Weekly hours</h3><span class="small muted">8 weeks</span></div>${area(weeks)}<div class="cols" style="display:none">
     ${weeks.map(([s, m], i) => `<div class="col"><em>${hrs(m)}</em><i class="${i === 7 ? 'cur' : ''}" style="height:${Math.max(4, m / wmx * 120)}px;animation-delay:${i * 50}ms"></i><small>${fd(s, { day: 'numeric', month: 'short' })}</small></div>`).join('')}</div></div></div>
+  ${funnel()}
   <div class="card" style="margin-top:16px"><div class="card-head"><div><h3>${ic('mail')}Automatic thank-you emails</h3><span class="small muted">Each scan-out checks for a first shift, 10 / 25 / 50 / 100 hours, or a return after a break. Links to Priority 2.</span></div></div>
     <div class="list">${S.emails.slice(0, 6).map(e => { const v = vol(e.volId); return v ? `<div class="item">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${e.kind === 'welcome' ? 'Welcome email' : e.kind === 'first shift' ? 'First shift' : e.kind + ' milestone'} · ${fd(e.date)}</span></div><button class="btn sm" data-action="email" data-id="${e.id}">View email</button></div>` : ''; }).join('')}</div></div>`;
 };
