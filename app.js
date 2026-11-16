@@ -4,7 +4,7 @@ const STORE_NOTE = { 'Al Quoz': 'Warehouse + shop', 'JLT': 'Cluster D', 'Dubai H
 const OPEN = 9 * 60, CLOSE = 21 * 60, STEP = 30;
 const MILESTONES = [10, 25, 50, 100, 200];
 const TONES = ['#0f6b4f', '#b0442a', '#3b5d86', '#a0731a', '#6d4c8c', '#2f7d6d', '#8a4b3a', '#4f6650'];
-const KEY = 'tfg-portal-demo-v2';
+const KEY = 'tfg-portal-demo-v3';
 
 /* ---------- icons ---------- */
 const P = {
@@ -29,6 +29,7 @@ const P = {
   warn: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   spark: '<path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/>',
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
   moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
 };
 const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
@@ -67,7 +68,7 @@ function seed() {
     ['v7', 'Karan Mehta', 'Dubai Hills', true, 24, 6],
     ['v10', 'Chloé Barbier', 'Alserkal', false, 88, 2],
   ];
-  const s = { volunteers: [], bookings: [], attendance: [], certs: [], emails: [], me: 'v1', scans: [] };
+  const s = { volunteers: [], bookings: [], attendance: [], certs: [], emails: [], me: 'v1', scans: [], settings: { grace: 30 } };
   for (const [id, name, store, cert, target, lastAgo] of vols) {
     s.volunteers.push({ id, name, email: name.toLowerCase().split(' ').join('.') + '@example.com', store, wantsCert: cert, status: 'active', joined: addDays(t, -Math.round(target * 3.1) - 21), code: 'TFG-' + id.toUpperCase() + '-' + (1000 + Math.floor(rnd() * 8999)) });
     let left = target * 60, day = -lastAgo;
@@ -98,6 +99,7 @@ function seed() {
   s.attendance.push({ id: uid(), volId: 'v2', store: 'Al Quoz', date: addDays(t, -2), in: '09:30', out: '14:15', minutes: 285, source: 'manual', status: 'pending', note: 'Forgot to scan out, stayed late sorting donations' });
   s.attendance.push({ id: uid(), volId: 'v7', store: 'Dubai Hills', date: addDays(t, -1), in: '17:00', out: '19:30', minutes: 150, source: 'manual', status: 'pending', note: 'Phone died, no QR' });
   s.certs.push({ id: uid(), volId: 'v4', date: addDays(t, -3), status: 'pending' });
+  [['v5', 'JLT', -5, '12:00', '14:00'], ['v3', 'Al Quoz', -12, '10:00', '12:00'], ['v7', 'Dubai Hills', -19, '15:00', '17:00']].forEach(([id, st, d, a, b]) => { book(id, st, addDays(t, d), a, b); s.bookings[s.bookings.length - 1].status = 'missed'; });
   s.emails.push({ id: uid(), volId: 'v4', kind: '50 hours', date: addDays(t, -12) });
   s.emails.push({ id: uid(), volId: 'v7', kind: '10 hours', date: addDays(t, -20) });
   s.emails.push({ id: uid(), volId: 'v1', kind: '25 hours', date: addDays(t, -40) });
@@ -107,6 +109,7 @@ function seed() {
 
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) || seed(); } catch { S = seed(); }
+if (!S.settings) S.settings = { grace: 30 };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 let UI = { role: 'volunteer', tab: { volunteer: 'home', manager: 'today', join: 'form' }, chips: [], joined: null, filter: 'All' };
 try { Object.assign(UI, JSON.parse(sessionStorage.getItem(KEY + '-ui')) || {}); } catch {}
@@ -121,7 +124,22 @@ const pendingMin = id => S.attendance.filter(a => a.volId === id && a.status ===
 const lastVisit = id => S.attendance.filter(a => a.volId === id).map(a => a.date).sort().pop();
 const upcoming = id => S.bookings.filter(b => b.volId === id && b.status === 'booked' && b.date >= today()).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
 const openAtt = id => S.attendance.find(a => a.volId === id && !a.out);
-const approvalsCount = () => S.volunteers.filter(v => v.status === 'pending').length + S.attendance.filter(a => a.status === 'pending' && a.out).length + S.certs.filter(c => c.status === 'pending').length;
+const grace = () => S.settings?.grace ?? 30;
+function sweepMissed(force) {
+  let n = 0; const t = today();
+  S.bookings.forEach(b => {
+    if (b.status !== 'booked') return;
+    const seen = S.attendance.some(a => a.volId === b.volId && a.date === b.date);
+    // Past days are swept automatically. Today is only swept by the demo button, so the live demo is never disturbed.
+    if ((b.date < t || (force && b.date === t)) && !seen) { b.status = 'missed'; b.missedOn = t; n++; }
+  });
+  return n;
+}
+function missRate() {
+  const since = addDays(today(), -28), m = S.bookings.filter(b => b.status === 'missed' && !b.excused && b.date >= since).length, v = S.attendance.filter(a => a.out && a.date >= since).length;
+  return [m, Math.round(m / Math.max(1, m + v) * 100)];
+}
+const approvalsCount =() => S.volunteers.filter(v => v.status === 'pending').length + S.attendance.filter(a => a.status === 'pending' && a.out).length + S.certs.filter(c => c.status === 'pending').length;
 const nextMilestone = h => MILESTONES.find(m => m > h) || Math.ceil((h + 1) / 100) * 100;
 
 /* ---------- primitives ---------- */
@@ -139,12 +157,14 @@ function ask(title, body, label, action, id = '', danger = false) {
 const closeModal = () => { $('#modal-root').innerHTML = ''; };
 function qr(text, cell = 5) { try { const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: cell, margin: 0, scalable: true }); } catch { return `<div class="mono" style="width:124px;height:124px;display:grid;place-items:center;line-height:1.3">${esc(text)}</div>`; } }
 const statusSt = a => !a.out ? '<span class="st live">On floor</span>' : a.status === 'approved' ? '<span class="st ok">Approved</span>' : '<span class="st wait">Needs approval</span>';
-const srcTag = a => `<span class="tag">${a.source === 'qr' ? 'QR' : 'MANUAL'}</span>`;
+const bookingSt = b => ({ cancelled: '<span class="st bad">Cancelled</span>', missed: '<span class="st bad">Missed</span>', attended: '<span class="st ok">Attended</span>' }[b.status] || '<span class="st">Past</span>');
+const srcTag = a => `<span class="tag">${a.source === 'qr' ? 'QR' : 'MANUAL'}</span>${a.corrected ? `<span class="tag" title="Original: ${a.orig.in}–${a.orig.out}">EDITED</span>` : ''}`;
 const empty = (icon, text) => `<div class="empty">${ic(icon)}${text}</div>`;
 
 /* ---------- milestone engine (Priority 2 hook) ---------- */
 function checkMilestones(volId, beforeMin) {
   const before = beforeMin / 60, after = approvedMin(volId) / 60, v = vol(volId);
+  if (v?.msgs === false) return;
   MILESTONES.filter(m => before < m && after >= m).forEach((m, i) => {
     S.emails.unshift({ id: uid(), volId, kind: m + ' hours', date: today() });
     setTimeout(() => toast(`Thank-you email sent to <b>${esc(v.name)}</b> for reaching ${m} hours`, 'mail'), 700 + i * 300);
@@ -305,10 +325,10 @@ function monthCal(v) {
 }
 VIEWS.volunteer.shifts = () => {
   const v = me(), up = upcoming(v.id);
-  const past = S.bookings.filter(b => b.volId === v.id && (b.date < today() || b.status === 'cancelled')).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+  const past = S.bookings.filter(b => b.volId === v.id && (b.date < today() || ['cancelled', 'missed'].includes(b.status))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
   return head('Your schedule', 'My shifts', 'Change times or cancel yourself. The store team sees it straight away.', `<button class="btn primary" data-action="tab" data-tab="book">${ic('plus')}Book a shift</button>`) +
   `<div class="grid" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start">${monthCal(v)}<div style="display:flex;flex-direction:column;gap:16px;min-width:0"><div class="card"><div class="card-head"><h3>Upcoming <span class="tag">${up.length}</span></h3></div><div class="list">${up.map(b => shiftItem(b)).join('') || empty('cal', 'No upcoming shifts. Book one any time.')}</div></div>
-  <div class="card"><div class="card-head"><h3>Changes</h3></div><div class="list">${past.map(b => `<div class="item"><div class="grow"><b>${fd(b.date)} · ${esc(b.store)}</b><span class="small muted mono">${b.start}–${b.end}</span></div>${b.status === 'cancelled' ? '<span class="st bad">Cancelled</span>' : '<span class="st">Past</span>'}</div>`).join('') || empty('repeat', 'Cancellations will show here')}</div></div></div></div>`;
+  <div class="card"><div class="card-head"><h3>Changes</h3></div><div class="list">${past.map(b => `<div class="item"><div class="grow"><b>${fd(b.date)} · ${esc(b.store)}</b><span class="small muted mono">${b.start}–${b.end}</span></div>${bookingSt(b)}</div>`).join('') || empty('repeat', 'Changes will show here')}</div>${past.some(b => b.status === 'missed') ? '<p class="hint" style="margin:12px 0 0">Missed shifts stay on your record. Book again any time, or tell the team if you did come in.</p>' : ''}</div></div></div>`;
 };
 
 function badges(v) {
@@ -374,17 +394,27 @@ VIEWS.join.form = () => {
       <div class="row" style="justify-content:center;margin-top:22px"><button class="btn primary" data-action="goto" data-role="manager" data-tab="approvals">See it in the staff view ${ic('arrow')}</button><button class="btn" data-action="join-again">Register someone else</button></div>
       <p class="hint" style="margin-top:18px">Replaces the current Airtable form. Applications go straight into the staff approvals queue.</p></div></div>`;
   }
-  return `<div class="join">${journey}<form class="card" data-form="join" style="padding:28px" novalidate><span class="kicker">Volunteer application</span><h2 style="margin-bottom:20px">Tell us about you</h2>
-    <div class="fields"><div class="field"><label for="j-name">Full name</label><input id="j-name" name="name" required placeholder="Sara Al Hashimi" autocomplete="name"><span class="err" data-err="name"></span></div>
-    <div class="field"><label for="j-email">Email</label><input id="j-email" name="email" type="email" required placeholder="sara@example.com" autocomplete="email"><span class="err" data-err="email"></span></div>
-    <div class="field"><label for="j-phone">Mobile</label><input id="j-phone" name="phone" type="tel" placeholder="+971 55 318 4402" autocomplete="tel"><span class="hint">Optional. For shift reminders by text later on.</span></div>
+  return `<div class="join">${journey}<form class="card" data-form="join" style="padding:28px" novalidate><span class="kicker">Volunteer application</span><h2 style="margin-bottom:16px">Tell us about you</h2>
+    <div class="up-wrap"><button type="button" class="btn up-btn" data-action="uaepass">${ic('shield')}Continue with UAE Pass<span class="tag">Concept</span></button>${UI.prefill ? '<span class="st ok" style="margin-top:8px">Details filled from UAE Pass (concept)</span>' : ''}<div class="or"><span>or fill in your details</span></div></div>
+    <div class="fields"><div class="field"><label for="j-name">Full name</label><input id="j-name" name="name" required placeholder="Sara Al Hashimi" autocomplete="name" value="${esc(UI.prefill?.name || '')}"><span class="err" data-err="name"></span></div>
+    <div class="field"><label for="j-email">Email</label><input id="j-email" name="email" type="email" required placeholder="sara@example.com" autocomplete="email" value="${esc(UI.prefill?.email || '')}"><span class="err" data-err="email"></span></div>
+    <div class="field"><label for="j-phone">Mobile</label><input id="j-phone" name="phone" type="tel" placeholder="+971 55 318 4402" autocomplete="tel" value="${esc(UI.prefill?.phone || '')}"><span class="hint">Optional. For shift reminders by text later on.</span></div>
     <div class="field"><label for="j-store">Preferred store</label><select id="j-store" name="store">${STORES.map(s => `<option>${s}</option>`).join('')}</select></div></div>
     <div class="field"><label>When are you usually free?</label><div class="chips">${['Weekday mornings', 'Weekday afternoons', 'Weekday evenings', 'Weekends'].map(c => `<button type="button" class="chip ${UI.chips.includes(c) ? 'on' : ''}" data-action="chip" data-v="${c}">${c}</button>`).join('')}</div></div>
     <div class="field"><label>Would you like a volunteering certificate after 50 hours?</label>
       <div class="chips"><label class="chip"><input type="radio" name="cert" value="yes" style="display:none"> Yes, please</label><label class="chip"><input type="radio" name="cert" value="no" style="display:none"> No, I'm here for the fun</label></div>
       <span class="hint">This only changes which reminders you get. We track everyone's hours either way.</span><span class="err" id="cert-err"></span></div>
-    <div class="field"><label for="j-notes">Anything we should know? <span class="hint">Optional</span></label><textarea id="j-notes" name="notes" rows="2" placeholder="Languages, skills, accessibility needs"></textarea></div>
-    <label class="check" style="margin-bottom:6px"><input type="checkbox" name="consent"><span>I agree to the volunteer code of conduct and to my hours being stored for my record.</span></label><span class="err" data-err="consent" style="display:block;margin-bottom:14px"></span>
+    <div class="field"><label for="j-notes">Anything we should know? <span class="hint">Optional</span></label><textarea id="j-notes" name="notes" rows="2" placeholder="Languages, skills, anything that helps us place you"></textarea></div>
+    <details class="privacy"><summary>How we use your details</summary><ul>
+      <li><b>What we collect:</b> your name, email, mobile (optional), preferred store and when you're free. We don't ask for ID documents online. A team leader checks ID in person at your induction and only records that it was checked.</li>
+      <li><b>Why:</b> to book shifts, log your hours, and contact you about volunteering.</li>
+      <li><b>Who sees it:</b> the store team and the volunteer coordinator.</li>
+      <li><b>How long:</b> Placeholder: TFG to set this, for example 24 months after your last visit.</li>
+      <li><b>Your choices:</b> ask the volunteer coordinator to show, correct or delete your details at any time.</li></ul>
+      <p class="hint">Draft wording for TFG to review. Not legal advice.</p></details>
+    <label class="check" style="margin-bottom:6px"><input type="checkbox" name="consent"><span>I agree to Thrift for Good using my details to manage my volunteering: bookings, attendance and hours.</span></label><span class="err" data-err="consent" style="display:block;margin-bottom:10px"></span>
+    <label class="check" style="margin-bottom:10px"><input type="checkbox" name="msgs"><span>Optional: send me thank-you messages when I reach milestones (10, 25, 50 and 100 hours). I can still volunteer without this.</span></label>
+    <p class="hint" style="margin:0 0 16px">You'll also be asked to follow the volunteer code of conduct, which your team leader goes through at induction.</p>
     <button class="btn primary" type="submit" style="width:100%;padding:12px">Submit application ${ic('arrow')}</button></form></div>`;
 };
 
@@ -396,11 +426,18 @@ function gantt(rows) {
   ${rows.map(({ v, b, o, d }) => {
     const bar = d ? `<div class="g-bar done" style="left:${pct(toMin(d.in))}%;width:${pct(toMin(d.out)) - pct(toMin(d.in))}%">${d.in}–${d.out}</div>`
       : o ? `<div class="g-bar live" style="left:${pct(toMin(o.in))}%;width:${Math.max(3, pct(Math.max(now, toMin(o.in) + 30)) - pct(toMin(o.in)))}%">in ${o.in}</div>` : '';
+    const late = b && !d && !o && now > toMin(b.start) + grace();
     const plan = b && !d && !o ? `<div class="g-bar" style="left:${pct(toMin(b.start))}%;width:${pct(toMin(b.end)) - pct(toMin(b.start))}%">${b.start}–${b.end}</div>` : '';
     return `<div class="g-row"><div class="who-cell">${avatar(v)}<div style="min-width:0"><b><button class="name-link" data-action="profile" data-id="${v.id}">${esc(v.name)}</button></b><small>${esc((o || d || b).store)}${b ? '' : ' · walk-in'}</small></div></div>
       <div class="g-track">${plan}${bar}${nowLine}</div>
-      <div class="g-act">${o ? `<button class="btn sm dark" data-action="scan" data-code="${v.code}">Scan out</button>` : d ? `<span class="st ok">${hrs(d.minutes)}h logged</span>` : `<button class="btn sm" data-action="scan" data-code="${v.code}">Scan in</button>`}</div></div>`;
+      <div class="g-act">${o ? `<button class="btn sm dark" data-action="scan" data-code="${v.code}">Scan out</button>` : d ? `<span class="st ok">${hrs(d.minutes)}h logged</span>` : `${late ? '<span class="st bad">Late</span>' : ''}<button class="btn sm" data-action="scan" data-code="${v.code}">Scan in</button>`}</div></div>`;
   }).join('') || empty('cal', 'No one booked or checked in today')}</div>`;
+}
+function missedCard() {
+  const list = S.bookings.filter(b => b.status === 'missed' && b.date >= addDays(today(), -14)).sort((a, b) => (b.date + b.start).localeCompare(a.date + a.start));
+  return `<div class="card"><div class="card-head"><div><h3>${ic('x')}Missed shifts</h3><span class="small muted">Marked automatically when nobody scans in. The booking stays on record.</span></div><span class="tag">${list.length}</span></div>
+    <div class="list">${list.map(b => { const v = vol(b.volId); return `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${fd(b.date)} · ${esc(b.store)} · <span class="mono">${b.start}–${b.end}</span>${b.excused ? ' · excused' : ''}</span></div><div class="row"><button class="btn sm" data-action="attend-missed" data-id="${b.id}">They came in</button>${b.excused ? '' : `<button class="btn sm" data-action="excuse-missed" data-id="${b.id}">Excuse</button>`}</div></div>`; }).join('') || empty('check', 'No missed shifts in the last two weeks')}</div>
+    <div class="miss-foot"><label class="small muted" for="grace">Marked missed this long after a shift ends</label><select id="grace" data-action="grace" style="width:auto">${[15, 30, 45, 60].map(m => `<option value="${m}" ${m === grace() ? 'selected' : ''}>${m} min</option>`).join('')}</select><button class="btn sm" data-action="sim-eod" title="Demo only">${ic('clock')}Simulate end of day</button></div></div>`;
 }
 VIEWS.manager.today = () => {
   const t = today();
@@ -420,7 +457,7 @@ VIEWS.manager.today = () => {
       <div class="card"><div class="card-head"><h3>Timeline</h3><div class="legend"><span><i style="border:1.5px dashed var(--line-2)"></i>Booked</span><span><i style="background:var(--accent)"></i>On floor</span><span><i style="background:var(--accent-tint)"></i>Done</span><span><i style="background:var(--bad);width:2px;height:12px"></i>Now</span></div></div>${gantt(rows)}</div>
       <div class="card"><div class="card-head"><h3>Walk-in without a booking?</h3><span class="small muted">They can still scan in</span></div>
         <div class="row">${walk.slice(0, 6).map(v => `<button class="btn sm" data-action="scan" data-code="${v.code}">${esc(v.name)}</button>`).join('') || '<span class="small muted">Everyone active is already on today\'s list</span>'}</div></div>
-    </div></div>`;
+    ${missedCard()}</div></div>`;
 };
 
 VIEWS.manager.approvals = () => {
@@ -430,8 +467,8 @@ VIEWS.manager.approvals = () => {
   return head('Needs a decision', 'Approvals', 'Everything waiting on staff, in one place.') +
   (clear ? `<div class="card all-clear"><div class="success-mark">${ic('check')}</div><div><h2>You're all caught up</h2><p class="muted" style="margin:4px 0 0">No applications, hours or certificates waiting. New ones will show up here with a count in the sidebar.</p></div></div>` : '') +
   `<div class="grid g2" style="align-items:start${clear ? ';display:none' : ''}">
-  ${sect('join', 'New volunteers', 'Approve once induction is done', nv.length, nv.map(v => `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${esc(v.store)} · applied ${relDay(v.joined).toLowerCase()} · ${esc(v.availability || 'flexible')}${v.wantsCert ? ' · wants certificate' : ''}</span></div>
-     <div class="row"><button class="btn sm primary" data-action="approve-vol" data-id="${v.id}">${ic('check')}Approve</button><button class="btn sm danger" data-action="decline-vol" data-id="${v.id}">Decline</button></div></div>`).join(''), 'No new applications')}
+  ${sect('join', 'New volunteers', 'Approve once induction and the in-person ID check are done', nv.length, nv.map(v => `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted">${esc(v.store)} · applied ${relDay(v.joined).toLowerCase()} · ${esc(v.availability || 'flexible')}${v.wantsCert ? ' · wants certificate' : ''}</span></div>
+     <div class="row"><label class="check idseen"><input type="checkbox" data-idseen="${v.id}"><span>ID seen in person</span></label><button class="btn sm primary" data-action="approve-vol" data-id="${v.id}">${ic('check')}Approve</button><button class="btn sm danger" data-action="decline-vol" data-id="${v.id}">Decline</button></div></div>`).join(''), 'No new applications')}
   ${sect('clock', 'Hours to confirm', 'Manual entries from missed scans', hp.length, hp.map(a => { const v = vol(a.volId); return `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)} · <span class="mono">${hrs(a.minutes)}h</span></b><span class="small muted">${fd(a.date)} · ${esc(a.store)} · <span class="mono">${a.in}–${a.out}</span>${a.note ? `<br>"${esc(a.note)}"` : ''}</span></div>
      <div class="row"><button class="btn sm primary" data-action="approve-hrs" data-id="${a.id}">${ic('check')}Approve</button><button class="btn sm danger" data-action="reject-hrs" data-id="${a.id}">Reject</button></div></div>`; }).join(''), 'All hours confirmed')}
   ${sect('award', 'Certificate requests', 'Volunteers past 50 hours', cr.length, cr.map(c => { const v = vol(c.volId); return `<div class="item stack">${avatar(v)}<div class="grow"><b>${esc(v.name)}</b><span class="small muted"><span class="mono">${hrs(approvedMin(v.id))}</span> approved hrs · requested ${fd(c.date)}</span></div>
@@ -443,11 +480,11 @@ VIEWS.manager.hours = () => {
   const f = UI.filter || 'All';
   const rows = S.attendance.filter(a => a.out && (f === 'All' || a.store === f)).sort((a, b) => (b.date + b.in).localeCompare(a.date + a.in));
   const total = rows.filter(a => a.status === 'approved').reduce((t, a) => t + a.minutes, 0);
-  return head('Official record', 'Hours log', 'Every volunteer visit, ready to export for CDA.', `<select data-action="filter" style="width:auto" aria-label="Store filter">${['All', ...STORES].map(s => `<option ${s === f ? 'selected' : ''} value="${s}">${s === 'All' ? 'All stores' : s}</option>`).join('')}</select><button class="btn" data-action="manual">${ic('plus')}Manual entry</button><button class="btn primary" data-action="export">${ic('dl')}Export CSV</button>`) +
+  return head('Official record', 'Hours log', 'Every volunteer visit. Export as a CSV any time.', `<select data-action="filter" style="width:auto" aria-label="Store filter">${['All', ...STORES].map(s => `<option ${s === f ? 'selected' : ''} value="${s}">${s === 'All' ? 'All stores' : s}</option>`).join('')}</select><button class="btn" data-action="manual">${ic('plus')}Manual entry</button><button class="btn primary" data-action="export">${ic('dl')}Export CSV</button>`) +
   `<div class="stats" style="margin-bottom:16px"><div><span>Approved hours</span><b>${hrs(total)}</b><span>${f === 'All' ? 'all stores' : f}</span></div><div><span>Visits</span><b>${rows.length}</b><span>logged</span></div>
     <div><span>Logged by QR</span><b>${Math.round(rows.filter(a => a.source === 'qr').length / Math.max(1, rows.length) * 100)}%</b><span>no staff typing</span></div><div><span>Waiting</span><b>${rows.filter(a => a.status === 'pending').length}</b><span>for approval</span></div></div>
-  <div class="card"><div class="table-wrap"><table><thead><tr><th>Volunteer</th><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged</th><th>Status</th></tr></thead><tbody>
-  ${rows.slice(0, 60).map(a => { const v = vol(a.volId); return `<tr><td><div class="who-cell">${avatar(v)}<button class="name-link" data-action="profile" data-id="${v.id}">${esc(v.name)}</button></div></td><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out}</td><td class="mono"><b>${hrs(a.minutes)}h</b></td><td>${srcTag(a)}</td><td>${statusSt(a)}</td></tr>`; }).join('')}
+  <div class="card"><div class="table-wrap"><table><thead><tr><th>Volunteer</th><th>Date</th><th>Store</th><th>Time</th><th>Hours</th><th>Logged</th><th>Status</th><th></th></tr></thead><tbody>
+  ${rows.slice(0, 60).map(a => { const v = vol(a.volId); return `<tr><td><div class="who-cell">${avatar(v)}<button class="name-link" data-action="profile" data-id="${v.id}">${esc(v.name)}</button></div></td><td>${fd(a.date)}</td><td>${esc(a.store)}</td><td class="mono">${a.in}–${a.out}</td><td class="mono"><b>${hrs(a.minutes)}h</b></td><td>${srcTag(a)}</td><td>${statusSt(a)}</td><td><button class="btn sm" data-action="correct" data-id="${a.id}">Correct</button></td></tr>`; }).join('')}
   </tbody></table></div>${rows.length > 60 ? `<p class="hint" style="margin:12px 0 0">Showing the latest 60 of ${rows.length}. The export includes everything.</p>` : ''}</div>`;
 };
 
@@ -501,7 +538,7 @@ VIEWS.manager.insights = () => {
   const weeks = Array.from({ length: 8 }, (_, i) => { const end = addDays(today(), -7 * (7 - i)), start = addDays(end, -6); return [start, appr.filter(a => a.date >= start && a.date <= end).reduce((t, a) => t + a.minutes, 0)]; });
   const wmx = Math.max(1, ...weeks.map(w => w[1]));
   return head('Last 4 weeks', 'Insights', '') +
-  `<div class="stats" style="margin-bottom:16px"><div><span>Hours, 4 weeks</span><b>${hrs(byStore.reduce((t, x) => t + x[1], 0))}</b><span>approved</span></div><div><span>Active volunteers</span><b>${active().length}</b><span>with portal access</span></div>
+  `<div class="stats" style="margin-bottom:16px"><div><span>Hours, 4 weeks</span><b>${hrs(byStore.reduce((t, x) => t + x[1], 0))}</b><span>approved</span></div><div><span>Missed shifts</span><b>${missRate()[0]}</b><span>${missRate()[1]}% of bookings, 4 wks</span></div>
   <div><span>Past 50 hours</span><b>${active().filter(v => approvedMin(v.id) >= 3000).length}</b><span>certificate eligible</span></div><div><span>Thank-yous sent</span><b>${S.emails.length}</b><span>automatically</span></div></div>
   <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)"><div class="card"><div class="card-head"><h3>Hours by store</h3></div><div class="bars">
     ${byStore.map(([s, m], i) => `<div class="bar-row"><span>${s}</span><div class="bar-track"><i style="width:${m / mx * 100}%;animation-delay:${i * 80}ms"></i></div><b>${hrs(m)}h</b></div>`).join('')}</div></div>
@@ -547,13 +584,25 @@ const MODALS = {
     $('.modal').style.width = 'min(780px,100%)';
     updatePicker($('#modal-root form'));
   },
-  manual() {
-    modal('Add hours manually', 'For a missed scan or a flat phone. Manual entries go to Approvals.', `<form data-form="manual">
-      <div class="field"><label>Volunteer</label><select name="volId">${active().map(v => `<option value="${v.id}">${esc(v.name)}</option>`).join('')}</select></div>
-      <div class="fields"><div class="field"><label>Store</label><select name="store">${STORES.map(s => `<option>${s}</option>`).join('')}</select></div><div class="field"><label>Date</label><input type="date" name="date" value="${today()}" max="${today()}"></div>
-      <div class="field"><label>Arrived</label><input type="time" name="in" value="10:00"></div><div class="field"><label>Left</label><input type="time" name="out" value="13:00"></div></div>
-      <div class="field"><label>Reason</label><input name="note" placeholder="Forgot to scan out"></div><div class="err" id="merr"></div>
+  manual(p = {}) {
+    modal('Add hours manually', 'For a missed scan or a flat phone. Manual entries go to Approvals.', `<form data-form="manual"><input type="hidden" name="bookingId" value="${p.bookingId || ''}">
+      <div class="field"><label>Volunteer</label><select name="volId">${active().map(v => `<option value="${v.id}" ${v.id === p.volId ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></div>
+      <div class="fields"><div class="field"><label>Store</label><select name="store">${STORES.map(s => `<option ${s === p.store ? 'selected' : ''}>${s}</option>`).join('')}</select></div><div class="field"><label>Date</label><input type="date" name="date" value="${p.date || today()}" max="${today()}"></div>
+      <div class="field"><label>Arrived</label><input type="time" name="in" value="${p.in || '10:00'}"></div><div class="field"><label>Left</label><input type="time" name="out" value="${p.out || '13:00'}"></div></div>
+      <div class="field"><label>Reason</label><input name="note" value="${esc(p.note || '')}" placeholder="Forgot to scan out"></div><div class="err" id="merr"></div>
       <div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-action="close">Cancel</button><button class="btn primary" type="submit">Send for approval</button></div></form>`);
+  },
+  uaepass() {
+    modal('UAE Pass (concept)', 'This shows the idea only. It is not connected to UAE Pass.', `<div class="up-note"><p>Real UAE Pass needs formal onboarding and approval from the UAE Pass team, and a trade licence for private organisations. Nothing in this prototype talks to UAE Pass.</p>
+      <ul><li>The volunteer approves sharing their name, email and mobile.</li><li>TFG stores a verified flag and a reference, not a copy of any ID.</li><li>Anyone without UAE Pass can still use the email form.</li></ul></div>
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-action="close">Close</button><button class="btn primary" data-action="uaepass-fill">Fill the form with a demo identity</button></div>`);
+    $('.modal').style.width = 'min(480px,100%)';
+  },
+  correct(a) {
+    const v = vol(a.volId);
+    modal(`Correct ${esc(v.name)}'s visit`, `${fd(a.date)} · ${esc(a.store)}. The original times are kept in the record.`, `<form data-form="correct" data-id="${a.id}"><div class="fields"><div class="field"><label>Arrived</label><input type="time" name="in" value="${a.in}"></div><div class="field"><label>Left</label><input type="time" name="out" value="${a.out}"></div></div>
+      <div class="field"><label>Reason for the correction</label><input name="note" required placeholder="Forgot to scan out, stayed to finish sorting"></div><div class="err" id="cerr"></div>
+      <div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-action="close">Cancel</button><button class="btn primary" type="submit">Save correction</button></div></form>`);
   },
   checkout(a) {
     const v = vol(a.volId), b = S.bookings.find(x => x.volId === a.volId && x.date === a.date && x.status === 'booked');
@@ -576,9 +625,9 @@ const SCRIPT = [
   ['manager', 'approvals', 'Approve after induction', 'Staff approve. A welcome email and QR code go out.'],
   ['volunteer', 'book', 'Flexible booking', 'Any day, any store, any hours. Tap arrive, then leave.'],
   ['volunteer', 'shifts', 'Change or cancel yourself', 'No more staff editing shifts by hand.'],
-  ['manager', 'today', 'Scan in and out at the till', 'Scan Aisha in, then out at 14:00. She crosses 50 hours.'],
+  ['manager', 'today', 'Scan in and out at the till', 'Scan Aisha in, then out at 14:00 (50 hours). Then press Simulate end of day to show missed shifts.'],
   ['manager', 'insights', 'Automatic thank-yous', 'The 50-hour email has just gone out. Priority 2 link.'],
-  ['manager', 'hours', 'Export for CDA', 'One CSV with every visit, ready to hand over.'],
+  ['manager', 'hours', 'Correct and export hours', 'Fix a wrong time with a reason, then export one CSV of approved hours.'],
 ];
 function renderScript() {
   let el = $('#script');
@@ -615,14 +664,15 @@ function downloadCSV(volId) {
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   const el = Object.assign(document.createElement('a'), { href: url, download: `tfg-volunteer-hours-${volId || 'all'}-${today()}.csv` });
   document.body.append(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast(`Exported ${rows.length} visits as CSV, ready for CDA`, 'dl');
+  toast(`Exported ${rows.length} visits as CSV`, 'dl');
 }
 
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-action]'); if (!t) return;
   const a = t.dataset.action, id = t.dataset.id;
   if (a === 'close-bg') { if (e.target === t) closeModal(); return; }
-  if (['me', 'filter'].includes(a)) return;
+  if (['me', 'filter', 'grace'].includes(a)) return;
+  if (a === 'approve-vol') { const cb = document.querySelector(`[data-idseen="${id}"]`); if (cb && !cb.checked) return toast('Tick "ID seen in person" first. We only record that it was checked, never a copy.', 'warn'); }
   if (['approve-vol', 'approve-hrs', 'reject-hrs', 'issue-cert'].includes(a) && !t.dataset.go && t.closest('.view .item')) { const row = t.closest('.item'); row.classList.add(a.startsWith('reject') ? 'leaving bad' : 'leaving'); t.dataset.go = 1; setTimeout(() => t.click(), 320); return; }
   const ok = (msg, icon) => { save(); render(); if (msg) toast(msg, icon); };
   const f = t.closest('form');
@@ -632,7 +682,7 @@ document.addEventListener('click', e => {
     case 'goto': UI.role = t.dataset.role; UI.tab[UI.role] = t.dataset.tab; render(); scrollTo(0, 0); break;
     case 'close': closeModal(); break;
     case 'reset': ask('Reset the demo?', 'All bookings, scans and approvals go back to the sample data. Use this before presenting.', 'Reset data', 'do-reset'); break;
-    case 'do-reset': closeModal(); S = seed(); UI.joined = null; UI.chips = []; ok('Demo data reset', 'repeat'); break;
+    case 'do-reset': closeModal(); S = seed(); UI.joined = null; UI.chips = []; UI.prefill = null; ok('Demo data reset', 'repeat'); break;
     case 'pick-date': f.date.value = t.dataset.d; updatePicker(f); break;
     case 'pick-store': f.store.value = t.dataset.s; updatePicker(f); break;
     case 'pick-slot': {
@@ -647,7 +697,7 @@ document.addEventListener('click', e => {
     case 'undo-cancel': { const b = S.bookings.find(x => x.id === id); if (b) { b.status = 'booked'; t.closest('.toast')?.remove(); ok('Shift restored', 'repeat'); } break; }
     case 'scan': scan(t.dataset.code); break;
     case 'manual': MODALS.manual(); break;
-    case 'approve-vol': { const v = vol(id); v.status = 'active'; S.emails.unshift({ id: uid(), volId: id, kind: 'welcome', date: today() }); ok(`<b>${esc(v.name)}</b> approved. Welcome email and QR code sent.`, 'mail'); break; }
+    case 'approve-vol': { const v = vol(id); v.status = 'active'; v.idChecked = today(); S.emails.unshift({ id: uid(), volId: id, kind: 'welcome', date: today() }); ok(`<b>${esc(v.name)}</b> approved. Welcome email and QR code sent.`, 'mail'); break; }
     case 'decline-vol': { const v = vol(id); ask(`Decline ${esc(v.name)}?`, 'Their application is removed. They can apply again any time.', 'Decline', 'do-decline', id, true); break; }
     case 'do-decline': { closeModal(); S.volunteers = S.volunteers.filter(x => x.id !== id); ok('Application declined', 'x'); break; }
     case 'approve-hrs': { const at = S.attendance.find(x => x.id === id), before = approvedMin(at.volId); at.status = 'approved'; checkMilestones(at.volId, before); ok(`${hrs(at.minutes)} hrs approved for <b>${esc(vol(at.volId).name)}</b>`); break; }
@@ -669,12 +719,19 @@ document.addEventListener('click', e => {
     case 'profile': profile(vol(id)); break;
     case 'big-qr': { const v = me(); $('#modal-root').innerHTML = `<div class="backdrop qr-bg" data-action="close-bg"><div class="qr-full" role="dialog" aria-modal="true"><span class="kicker">Thrift for Good · volunteer</span><h2>${esc(v.name)}</h2><div class="qr-big">${qr(v.code, 8)}</div><b class="mono">${v.code}</b><p class="small muted">Turn your screen brightness up and hold it under the scanner.</p><button class="btn dark" data-action="close" style="width:100%">Done</button></div></div>`; break; }
     case 'print-cert': document.body.classList.add('printing-cert'); window.print(); setTimeout(() => document.body.classList.remove('printing-cert'), 500); break;
-    case 'join-again': UI.joined = null; UI.chips = []; render(); break;
+    case 'uaepass': MODALS.uaepass(); break;
+    case 'uaepass-fill': UI.prefill = { name: 'Noor Al Suwaidi', email: 'noor.alsuwaidi@example.com', phone: '+971 50 412 7731' }; closeModal(); render(); toast('Details filled from the UAE Pass concept. In the real flow the volunteer approves sharing them.', 'check'); break;
+    case 'sim-eod': { const n = sweepMissed(true); ok(n ? `${n} unscanned booking${n > 1 ? 's' : ''} marked missed. Records kept, slots freed.` : 'Nothing to mark: everyone booked today has scanned in', n ? 'x' : 'check'); break; }
+    case 'attend-missed': { const b = S.bookings.find(x => x.id === id); MODALS.manual({ volId: b.volId, store: b.store, date: b.date, in: b.start, out: b.end, note: 'Attended, scan missed', bookingId: b.id }); break; }
+    case 'excuse-missed': { const b = S.bookings.find(x => x.id === id); b.excused = true; ok('Marked as excused. It won\'t count towards the missed rate.', 'check'); break; }
+    case 'correct': MODALS.correct(S.attendance.find(x => x.id === id)); break;
+    case 'join-again': UI.joined = null; UI.chips = []; UI.prefill = null; render(); break;
   }
 });
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.action === 'me') { S.me = t.value; save(); render(); }
+  if (t.dataset.action === 'grace') { S.settings.grace = +t.value; save(); render(); toast(`Shifts are marked missed ${t.value} min after they end`, 'clock'); }
   if (t.dataset.action === 'filter') { UI.filter = t.value; render(); }
   if (t.name === 'cert') { t.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.contains(t))); $('#cert-err').textContent = ''; }
 });
@@ -708,6 +765,7 @@ document.addEventListener('submit', e => {
   if (kind === 'manual') {
     const m = toMin(d.out) - toMin(d.in); if (m <= 0) { $('#merr').textContent = 'The leaving time needs to be after the arrival time'; return; }
     S.attendance.push({ id: uid(), volId: d.volId, store: d.store, date: d.date, in: d.in, out: d.out, minutes: m, source: 'manual', status: 'pending', note: d.note });
+    if (d.bookingId) { const bk = S.bookings.find(x => x.id === d.bookingId); if (bk) bk.status = 'attended'; }
     closeModal(); save(); render(); toast(`${hrs(m)} hrs added for <b>${esc(vol(d.volId).name)}</b> and sent to Approvals`);
   }
   if (kind === 'checkout') {
@@ -716,8 +774,16 @@ document.addEventListener('submit', e => {
     const before = approvedMin(at.volId), v = vol(at.volId), isFirst = !S.attendance.some(x => x.volId === at.volId && x.out);
     Object.assign(at, { in: d.in, out: d.out, minutes: m, status: 'approved' });
     logScan(v, 'out', d.out); closeModal(); checkMilestones(at.volId, before);
-    if (isFirst) { S.emails.unshift({ id: uid(), volId: v.id, kind: 'first shift', date: today() }); setTimeout(() => toast(`First-shift thank-you sent to <b>${esc(v.name)}</b>`, 'mail'), 700); } save(); render();
+    if (isFirst && v.msgs !== false) { S.emails.unshift({ id: uid(), volId: v.id, kind: 'first shift', date: today() }); setTimeout(() => toast(`First-shift thank-you sent to <b>${esc(v.name)}</b>`, 'mail'), 700); } save(); render();
     toast(`<b>${esc(v.name)}</b> scanned out. ${hrs(m)} hrs logged automatically.`);
+  }
+  if (kind === 'correct') {
+    const at = S.attendance.find(x => x.id === f.dataset.id), m = toMin(d.out) - toMin(d.in);
+    if (m <= 0) { $('#cerr').textContent = 'The leaving time needs to be after the arrival time'; return; }
+    const before = approvedMin(at.volId);
+    at.orig = at.orig || { in: at.in, out: at.out, minutes: at.minutes };
+    Object.assign(at, { in: d.in, out: d.out, minutes: m, status: 'approved', corrected: true, note: d.note });
+    closeModal(); checkMilestones(at.volId, before); save(); render(); toast(`Visit corrected to ${hrs(m)} hrs. Original times kept.`, 'check');
   }
   if (kind === 'join') {
     const errs = {};
@@ -729,9 +795,10 @@ document.addEventListener('submit', e => {
     $('#cert-err').textContent = errs.cert || '';
     if (Object.keys(errs).length) { const firstBad = f.querySelector('.field.invalid input, .field.invalid textarea') || f.querySelector('[name=consent]'); if (errs.name || errs.email) firstBad.focus(); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); return; }
     const id = 'v' + uid();
-    S.volunteers.push({ id, name: d.name.trim(), email: d.email, store: d.store, wantsCert: d.cert === 'yes', status: 'pending', joined: today(), code: 'TFG-' + id.slice(1, 5).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 8999), availability: UI.chips.join(', ') || 'Flexible', notes: d.notes });
-    UI.joined = id; UI.chips = []; save(); render(); scrollTo(0, 0);
+    S.volunteers.push({ id, name: d.name.trim(), email: d.email, store: d.store, wantsCert: d.cert === 'yes', status: 'pending', joined: today(), code: 'TFG-' + id.slice(1, 5).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 8999), availability: UI.chips.join(', ') || 'Flexible', notes: d.notes, msgs: d.msgs === 'on', consentAt: today(), viaUaePass: !!UI.prefill });
+    UI.joined = id; UI.chips = []; UI.prefill = null; save(); render(); scrollTo(0, 0);
   }
 });
 
+if (sweepMissed()) save();
 render();
