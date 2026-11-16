@@ -655,3 +655,23 @@ button.swing{border:0;font:inherit;width:100%;cursor:zoom-in;display:block}
   body.printing-cert .cert .big{font-size:64px}
 }
 kbd{font:500 10.5px "Geist Mono",monospace;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:0 5px;margin-left:5px;color:var(--ink-3);background:var(--surface)}
+
+/* ---------- consent, UAE Pass concept, missed shifts ---------- */
+.up-wrap{display:flex;flex-direction:column;align-items:stretch;margin-bottom:18px}
+.up-btn{justify-content:center;gap:10px;padding:12px;border-style:dashed}
+.up-btn .tag{margin-left:4px}
+.or{display:flex;align-items:center;gap:12px;margin-top:16px;color:var(--ink-3);font-size:12.5px}
+.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+.up-note ul{margin:10px 0 0;padding-left:18px;color:var(--ink-2)}
+.up-note li{margin:4px 0}
+.up-note p{margin:0;color:var(--ink-2)}
+details.privacy{margin:4px 0 14px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--sunk)}
+details.privacy summary{cursor:pointer;font-weight:500;font-size:14px}
+details.privacy ul{margin:10px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink-2)}
+details.privacy li{margin:6px 0}
+details.privacy .hint{margin:8px 0 0}
+.miss-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.miss-foot label{flex:1;min-width:160px}
+.idseen{font-size:12.5px;gap:6px;white-space:nowrap}
+.tag + .tag{margin-left:4px}
+.g-act{display:flex;align-items:center;justify-content:flex-end;gap:8px}
